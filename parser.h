@@ -8,8 +8,11 @@
 * @author
 * @author
 * 
-* @file scanner.c 
+* @file parser.h
 **************************************/
 
-#include "scanner.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+int parser(int *p_text);
