@@ -18,10 +18,11 @@
 #include "parser.h"
 
 
-int reading_file(int *filename){
+int reading_file(const char *filename){
     FILE *infile;
     char *buffer;
     long numbytes;
+
 
     /* open an existing file for reading */
     infile = fopen(filename, "r");
@@ -57,19 +58,18 @@ int reading_file(int *filename){
     
     /* free the memory we used for the buffer */
     free(buffer);
-    parser(&text);
+    parser(&text, numbytes);
 
     return OK;
 }
+
 
 int main(int argc, char **argv) {
     if (argc != 2){
         printf("Program musi byt spusten s jednim argumentem !!\n");
         return INTERNAL_ERR;
     }
-    int *filename = argv[1];
-    reading_file(filename);
-
+    reading_file(argv[1]);
 
     return OK;
 }

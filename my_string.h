@@ -14,12 +14,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "scanner.h"
 
 typedef struct {
-  Token *array;
-  size_t used;
-  size_t size;
-} TokenArray;
+    char* str;
+    int length;
+    int alloc_size;
+} String;
 
-void parser(char *p_text, int numbytes);
+int string_init(String *s);
+int free_memory(int exit_code, String *string);
+int string_add_char(String *s, char c);
