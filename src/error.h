@@ -11,7 +11,7 @@
 * @file error.h 
 **************************************/
 
-#ifnder ERROR_H
+#ifndef ERROR_H
 #define ERROR_H
 
 	#define OK 0
