@@ -14,7 +14,7 @@
 #ifnder ERROR_H
 #define ERROR_H
 
-    #define OK 0
+	#define OK 0
 	#define SCANNER_ERR 1	// Faulty lexem of IFJ21
 	#define PARSER_ERR 2	// Faulty syntax of IFJ21
 	#define UNDEFINED_VAR_ERR 3	// Undefined function/var etc.
