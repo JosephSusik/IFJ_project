@@ -20,9 +20,9 @@
 	#define UNDEFINED_VAR_ERR 3	// Undefined function/var etc.
 	#define DATA_TYPE_ERR 4	// Error while declaring data type
 	#define PARAM_ERR 5	// Wrong number of paramters or return types
-    #define ARITHMETICS_ERR 6	// Error in arithmetics etc.
+	#define ARITHMETICS_ERR 6	// Error in arithmetics etc.
 	#define OTHER_ERR 7	// Other semantic errors
-    #define END_NILL_ERR 8 // Unexpected value "nil"
+	#define END_NILL_ERR 8 // Unexpected value "nil"
 	#define DIV_ZERO_ERR 9	// Division by zero
 	#define INTERNAL_ERR 99	// Error in the program, malloc etc.
 
