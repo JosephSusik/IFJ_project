@@ -19,6 +19,3 @@ scanner.o: scanner.c scanner.h my_string.o
 
 my_string.o: my_string.c my_string.h
 	$(CC) $(CFLAGS) -c my_string.c
-
-clean:
-	rm -f *.o IFJ21
