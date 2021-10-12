@@ -25,10 +25,13 @@ typedef enum {
     KEYWORD_FUNCTION,
     KEYWORD_GLOBAL,
     KEYWORD_IF,
+    KEYWORD_INTEGER,
     KEYWORD_LOCAL,
     KEYWORD_NIL,
+    KEYWORD_NUMBER,
     KEYWORD_REQUIRE,
     KEYWORD_RETURN,
+    KEYWORD_STRING,
     KEYWORD_THEN,
     KEYWORD_WHILE
 } Keyword;
@@ -50,6 +53,7 @@ typedef enum {
     TOKEN_TYPE_MULTIPLY, // *                   END STATE
     TOKEN_TYPE_LENGTH,  // #                    END STATE
     TOKEN_TYPE_COMMA,   // ,                    END STATE
+    TOKEN_TYPE_INT,
 
     TOKEN_TYPE_LEFT_PAR,    // (                END STATE
     TOKEN_TYPE_RIGHT_PAR,   // )                END STATE
@@ -75,7 +79,13 @@ typedef enum {
     TOKEN_TYPE_STRING_ESCAPE_ONE,
     TOKEN_TYPE_STRING_ESCAPE_TWO,
     TOKEN_TYPE_STRING_ESCAPE_THREE,
-    TOKEN_TYPE_STRING_ESCAPE_WRITE
+    TOKEN_TYPE_STRING_ESCAPE_WRITE,
+
+    TOKEN_TYPE_DOUBLE_DOT,
+    TOKEN_TYPE_DOUBLE,
+    TOKEN_TYPE_EXPONENT,
+    TOKEN_TYPE_EXPONENT_SIGN,
+    TOKEN_TYPE_EXPONENT_EXPONENT
 
 } Token_type;
 
@@ -92,4 +102,4 @@ typedef struct {
     int tuniontype;
 } Token;
 
-int scan_token(Token *New_token, char *p_text, int *p_text_position);
+int scan_token(Token *New_token, char *p_text, int *p_text_position, String *str);

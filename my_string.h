@@ -22,5 +22,6 @@ typedef struct {
 } String;
 
 int string_init(String *s);
-int free_memory(int exit_code, String *string);
+void free_memory(String *string);
 int string_add_char(String *s, char c);
+int string_cmp(String *s, const char *keyword_string);

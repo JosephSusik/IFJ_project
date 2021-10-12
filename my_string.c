@@ -11,7 +11,7 @@
 
 int string_init(String *s) {
     
-    s->str = (char*) malloc(sizeof(STRING_LEN_INC));
+    s->str = calloc(STRING_LEN_INC, sizeof(char));
     
     if (s->str == NULL) {
         return INTERNAL_ERR;
@@ -45,8 +45,11 @@ int string_add_char(String *s, char c) {
     return OK;
 }
 
-int free_memory(int exit_code, String *string){
-
+void free_memory(String *string){
     free(string->str);
-    return exit_code;
+}
+
+int string_cmp(String *s, const char *keyword_string){
+    
+    return strcmp(s->str, keyword_string);
 }

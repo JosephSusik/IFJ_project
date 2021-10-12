@@ -18,7 +18,7 @@
 #include "parser.h"
 
 void initTokenArray(TokenArray *a, size_t initialSize) {
-  a->array = malloc(initialSize * sizeof(Token));
+  a->array = calloc(initialSize, sizeof(Token));
   a->used = 0;
   a->size = initialSize;
 }
@@ -34,14 +34,22 @@ void insertTokenArray(TokenArray *a, Token *element) {
 
 void killTokens(TokenArray *a){
   size_t x = 0;
+  size_t z = 0;
+  
+  printf("V poli je celkove %li tokenu\n", a->used);
   while(x < a->used){
     if(a->array[x].tuniontype == 3){
-      free_memory(OK, a->array[x].tvalue.string);
+      printf("Funkce %s\n", a->array[x].tvalue.string[z]);
+      z++;
     }
+    x++;
+  }
+  if(a->used > 0){
+    free_memory(a->array[x].tvalue.string);
   }
 }
 
-void freeTokenArray(TokenArray *a) {
+void freeTokenArray(TokenArray *a) {  
   killTokens(a);
   free(a->array);
   a->array = NULL;
@@ -52,11 +60,11 @@ void parser(char *p_text, int numbytes){
     //printf("%c\n", p_text[1]);
     if(numbytes == 0)
         exit(INTERNAL_ERR);
-    printf("%i\n", numbytes);
+    printf("V kodu je celkove %i znaku\n", numbytes);
     char codetext[numbytes];
     strcpy(codetext, p_text);
     int text_position = 0;
-
+    
     TokenArray MainTokenArray;
     initTokenArray(&MainTokenArray, 50);
     int returnValue;
@@ -65,22 +73,35 @@ void parser(char *p_text, int numbytes){
         // Create new token
         Token New_token;
         Token *p_New_token = &New_token;
+        printf("Novy token %p\n", p_New_token);
+
+        String string; 
+        String *p_string = &string;
+        printf("Novy string %p\n", p_string);
+
+        int returnValue = string_init(p_string);
+        if(returnValue != OK)
+          exit(INTERNAL_ERR);
 
         // Call scanning function
-        returnValue = scan_token(p_New_token, p_text, &text_position);
+        returnValue = scan_token(p_New_token, p_text, &text_position, p_string);
+        
+        if(p_New_token->tuniontype != 3){
+          free_memory(p_string);
+        }
+        else{
+          p_New_token->tvalue.string = p_string;
+          printf("Token je string\n");
+        }
+
         if(returnValue != OK){
             freeTokenArray(&MainTokenArray);
             exit(returnValue);
         }
+        //printf("%s\n", *p_New_token->tvalue.string);
         insertTokenArray(&MainTokenArray, p_New_token);
     }
-    /*
-    Token *pointer = &MainTokenArray.array[0];
-    if(pointer->ttype == TOKEN_TYPE_PLUS)
-      printf("%i\n", pointer->tvalue.whole_num);
 
-    */
-    
     freeTokenArray(&MainTokenArray);
 
 }
