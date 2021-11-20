@@ -1,0 +1,50 @@
+1.  <require> -> REQUIRE ID EOL <prog>
+2.  <prog> -> FUNCTION ID ( <params> ) <return> EOL <body> EOL END <prog>
+3.  <prog> -> EOL <prog>
+4.  <prog> -> EOF
+5.  <params> -> ε
+6.  <params> -> ID : <type> <params_2>
+7.  <params_2> -> , ID : <type> <params_2>
+8.  <params_2> -> ε
+9.  <return> -> ε
+10. <return> -> : <type> <return_2>
+11. <return_2> -> , <type> <return_2>
+12. <return_2> -> ε
+13. <type> -> INTEGER
+14. <type> -> NUMBER
+15. <type> -> STRING
+16. <type> -> NIL
+17. <body> -> ε
+18. <body> -> EOL <body>
+19. <body> -> IF <expression> THEN EOL <body> <return> EOL ELSE EOL <body> <return> EOL END EOL <body>
+20. <body> -> WHILE <expression> DO EOL <body> <return> EOL END EOL <body>
+21. <body> -> <return>
+22. <body> -> ID ( <args> ) <body>
+23. <body> -> <id> = <exp> <body>
+24. <body> -> <scope> ID : <assign> <body>
+25. <return> -> ε
+26. <return> -> RETURN <return_value> EOL <body>
+27. <return_value> -> ε
+28. <return_value> -> <exp>
+29. <exp> -> <expression> <expression_2> <exp_2>
+30. <exp> -> ID ( <args> ) <exp_2>¨
+31. <exp_2> -> ε
+32. <exp_2> -> , <exp> <exp_2>
+33. <expression_2> -> ε
+34. <expression_2> -> , <expression> <expression_2>
+35. <args> -> ε
+36. <args> -> <value> <arg_2>
+37. <arg_2> -> ε
+38. <arg_2> -> , <value> <arg_2>
+39. <value> -> ID
+40. <value> -> INTEGER_VALUE
+41. <value> -> NUMBER_VALUE
+42. <value> -> STRING_VALUE
+43. <value> -> NIL
+44. <id> -> ID <id_2>
+45. <id_2> -> ε
+46. <id_2> -> , <id> <id_2>
+47. <assign> -> <type>
+48. <assign> -> <type> = <exp>
+49. <assign> -> <type> = <value>
+
