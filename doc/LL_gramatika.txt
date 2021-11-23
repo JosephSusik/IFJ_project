@@ -1,13 +1,13 @@
 1.  <require> -> REQUIRE ID EOL <prog>
 2.  <prog> -> FUNCTION ID ( <params> ) <return_type> EOL <body> EOL END <prog>
 3.  <prog> -> GLOBAL ID : FUNCTION ( <type> <type_2> ) <return_type> EOL <prog>
-4.  <prog> -> EOL <prog>
-5.  <prog> -> EOF
-6.  <prog> -> ID ( <args> ) EOL <prog>
+4.  <prog> -> ID ( <args> ) EOL <prog>
+5.  <prog> -> EOL <prog> 
+6.  <prog> -> EOF
 7.  <params> -> ε
 8.  <params> -> ID : <type> <params_2>
 9.  <params_2> -> , ID : <type> <params_2>
-10.  <params_2> -> ε
+10. <params_2> -> ε
 11. <return_type> -> ε
 12. <return_type> -> : <type> <return_type_2>
 13. <return_type_2> -> , <type> <return_type_2>
@@ -16,8 +16,8 @@
 16. <type> -> NUMBER
 17. <type> -> STRING
 18. <type> -> NIL
-19.  <type_2> -> , <type> <type_2>
-20.  <type_2> -> ε
+19. <type_2> -> , <type> <type_2>
+20. <type_2> -> ε
 21. <body> -> ε
 22. <body> -> EOL <body>
 23. <body> -> IF <expression> THEN EOL <body> <return> EOL ELSE EOL <body> <return> EOL END EOL <body>
