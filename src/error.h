@@ -5,6 +5,7 @@
 *
 * @author Josef Susík <xsusik00>
 * @author Marek Putala <xputal00>
+* @author Samuel Popelář <xpopel22>
 *
 * @file error.h
 **************************************/

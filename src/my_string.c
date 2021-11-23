@@ -5,8 +5,9 @@
 * 
 * @author Josef Susík <xsusik00>
 * @author Marek Putala <xputal00>
+* @author Samuel Popelář <xpopel22>
 * 
-* @file string.c 
+* @file my_string.c 
 **************************************/
 #include <stdlib.h>
 
@@ -53,7 +54,7 @@ int string_add_char(String *s, char c) {
         
         s->alloc_size = s->length + STRING_LEN_INC; // New allocated size
     
-    } // end if
+    }
     
     s->str[s->length] = c;  // Add the new char
     s->length++;    // Increase the length by 1
@@ -63,6 +64,24 @@ int string_add_char(String *s, char c) {
 }
 
 int string_cmp(String *s, const char *keyword_string){
-    
     return strcmp(s->str, keyword_string);
+}
+
+void string_print(String *s) {
+    for(int i = 0; i < s->length; i++) {
+        printf("%c", s->str[i]);
+    }
+}
+
+int string_copy(String *s1, String *s2) {
+    int new_length = s2->length;
+    if (new_length >= s1->alloc_size) {
+        if ((s1->str = (char*) realloc(s1->str, new_length + 1)) == NULL) {
+            return INTERNAL_ERR;
+        s1->alloc_size = new_length + 1;
+        }
+    }
+    strcpy(s1->str, s2->str);
+    s1->length = new_length;
+    return OK;
 }

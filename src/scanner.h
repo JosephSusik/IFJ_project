@@ -5,6 +5,7 @@
 *
 * @author Josef Susík <xsusik00>
 * @author Marek Putala <xputal00>
+* @author Samuel Popelář <xpopel22>
 *
 * @file scanner.h
 **************************************/
@@ -28,13 +29,13 @@ typedef enum {
     KEYWORD_IF,
     KEYWORD_INTEGER,
     KEYWORD_STRING,
+    KEYWORD_NUMBER,
     KEYWORD_LOCAL,
     KEYWORD_NIL,
     KEYWORD_REQUIRE,
     KEYWORD_RETURN,
     KEYWORD_THEN,
-    KEYWORD_WHILE,
-    KEYWORD_NUMBER
+    KEYWORD_WHILE
 } Keyword;
 
 typedef enum {
@@ -73,6 +74,7 @@ typedef enum {
     TOKEN_TYPE_LINE_COMMENTARY,  // --
     TOKEN_TYPE_BLOCK_COMMENTARY_START, // --[[
     TOKEN_TYPE_BLOCK_COMMENTARY_END, // ]]
+    TOKEN_TYPE_BLOCK_COMMENTARY_END_2,
 
     TOKEN_TYPE_STRING,
     TOKEN_TYPE_STRING_START,
@@ -100,7 +102,7 @@ typedef union {
 typedef struct {
     Token_type ttype;
     Token_value tvalue;
-    int tuniontype;
+    int tuniontype; // 0 = basic, 1 = int, 2 = double, 3 = ID, 4 = keyword, 5 = string  
 } Token;
 
 void setSourceFile(FILE *f);

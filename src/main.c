@@ -5,18 +5,18 @@
 *
 * @author Josef Susík <xsusik00>
 * @author Marek Putala <xputal00>
-* @author
-* @author
+* @author Samuel Popelář <xpopel22>
 *
 * @file main.c
 **************************************/
 
 #include <stdio.h>
 #include "scanner.h"
+#include "parser.h"
 
 
 int main(int argc, char* argv[]) {
-
+	
 	FILE *f;
 	if (argc == 1) {
 		printf("Není zadán vstupní soubor!\n");
@@ -30,8 +30,18 @@ int main(int argc, char* argv[]) {
 
 
 	setSourceFile(f);
-
-	parse();
+	String str;
+    if (string_init(&str) == 1)
+    {
+        return INTERNAL_ERR;
+    }
+    setString(&str);
+	
+	int exit = parse();
+	if (exit != 0) {
+		printf("Something went wrong\n");
+		return exit;
+	}
 	//printf("Hello IFJ\n");
 
 	return 0;

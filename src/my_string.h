@@ -5,12 +5,13 @@
 *
 * @author Josef Susík <xsusik00>
 * @author Marek Putala <xputal00>
+* @author Samuel Popelář <xpopel22>
 *
-* @file string.h
+* @file my_string.h
 **************************************/
 
-#ifndef _MY_STRING_H
-#define _MY_STRING_H
+#ifndef MY_STRING_H
+#define MY_STRING_H
 
 #include <stdio.h>
 #include <string.h>
@@ -27,7 +28,9 @@ void string_free(String *s);
 void string_clear(String *s);
 int string_add_char(String *s, char c);
 int string_cmp(String *s, const char *keyword_string);
+void string_print(String *s);
+int string_copy(String *s1, String *s2);
 
 
 
-#endif // STRING_H
+#endif // MY_STRING_H

@@ -1,14 +1,14 @@
 CC = gcc
 CFLAGS = -std=c99 -Wall -Wextra
 
-FILES = main.o my_string.o scanner.o parser.o
+FILES = main.o my_string.o scanner.o parser.o code_generator.o
 
 all: build
 
 build: $(FILES) error.h
 	$(CC) $(CFLAGS) $(FILES) -o project
 
-main.o: main.c scanner.h
+main.o: main.c scanner.h parser.h
 	$(CC) $(CFLAGS) -c main.c
 
 my_string.o: my_string.c my_string.h
@@ -17,8 +17,11 @@ my_string.o: my_string.c my_string.h
 scanner.o: scanner.c scanner.h my_string.h error.h
 	$(CC) $(CFLAGS) -c scanner.c
 
-parser.o: parser.c parser.h scanner.h error.h
+parser.o: parser.c parser.h scanner.h error.h code_generator.h
 	$(CC) $(CFLAGS) -c parser.c
+
+code_generator.o: code_generator.c
+	$(CC) $(CFLAGS) -c code_generator.c
 
 clean:
 	rm -f *.o project
