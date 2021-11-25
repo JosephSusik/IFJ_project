@@ -11,8 +11,15 @@
 **************************************/
 
 #include "parser.h"
+/*TO-DO
+- buildin functions
+- #
+- expressions
+- symtable
+*/
 
-//get_token, ignores EOL
+
+//get_token, ignores EOL, ignores space, tab
 #define get_token() \
     ({\
         while(1) {\
@@ -21,12 +28,16 @@
                 return PARSER_ERR; \
                 break;\
             } \
-            if (parser->token.ttype != 2) {\
+            if ((parser->token.ttype != 2) && (parser->token.ttype != 3)) {\
                 if (parser->exit_code != 0) {\
                     return parser->exit_code;\
                     break;\
                 }\
                 break;\
+            }\
+            if (parser->exit_code != 0) {\
+                    return parser->exit_code;\
+                    break;\
             }\
         }\
     })\
@@ -40,12 +51,16 @@
                 return 0; \
                 break;\
             } \
-            if (parser->token.ttype != 2) {\
+            if ((parser->token.ttype != 2) && (parser->token.ttype != 3)) {\
+                if (parser->exit_code != 0) { \
+                    return parser->exit_code; \
+                    break;\
+                } \
                 break;\
             }\
             if (parser->exit_code != 0) { \
                 return parser->exit_code; \
-                break;\
+               break;\
             } \
         }\
     })\
@@ -53,10 +68,20 @@
 //get_token, returns EOL if found
 #define get_token_EOL_gut() \
     ({ \
-    parser->exit_code = getNextToken(&parser->token); \
-    if (parser->token.ttype == 1) { \
+    while(1) {\
+        parser->exit_code = getNextToken(&parser->token); \
+        if (parser->token.ttype == 1) { \
             return PARSER_ERR; \
+            break;\
         } \
+        if (parser->token.ttype != 3) {\
+            if (parser->exit_code != 0) { \
+                return parser->exit_code; \
+                break;\
+            } \
+        break;\
+        }\
+    }\
     }) \
 
 #define get_token_EOL_EOF_gut() \
@@ -124,6 +149,16 @@
         }\
     }) \
 
+#define token_int_num_str_nil() \
+    ({ \
+        if (parser->token.tvalue.kword != 6 && \
+        parser->token.tvalue.kword != 7 && \
+        parser->token.tvalue.kword != 8 &&\
+        parser->token.tvalue.kword != 10) {\
+            return PARSER_ERR; \
+        }\
+    }) \
+
 
 Parser init_parser() {
     Parser parser = malloc(sizeof(struct parser));
@@ -138,17 +173,18 @@ int free_parser(Parser parser) {
 int parse() {
     Parser parser = init_parser();
 
+    /*require "ifj21" is not needed*/
     parser->exit_code = require(parser);
     if (parser->exit_code != 0) {
         return parser->exit_code;
     }
+    
+    
+    //require(parser);
+    
     //Call function to print header of IFJcode21 -> .IFJcode21
     print_header();
 
-    //Check \n after require ifj21
-    get_token_EOL_EOF_gut();
-
-    //do more parsing
     parser->exit_code = prog(parser);
     if (parser->exit_code != 0) {
         return parser->exit_code;
@@ -186,6 +222,16 @@ int is_ttype(Parser parser, int type) {
     }
 }
 
+int is_int_num_str(Parser parser) {
+    if (parser->token.tvalue.kword != 6 && 
+        parser->token.tvalue.kword != 7 && 
+        parser->token.tvalue.kword != 8 ) {
+            return 0; 
+    } else {
+        return 1;
+    }
+}
+
 // <require> -> REQUIRE ID 
 int require(Parser parser) {
     get_token_EOF_gut();
@@ -195,6 +241,7 @@ int require(Parser parser) {
     token_stringcmp("ifj21");
     return 0;
 }//end of require()
+
 
 // <prog>
 int prog(Parser parser) {
@@ -213,8 +260,14 @@ int prog(Parser parser) {
         if (parser->exit_code != 0) {
             return parser->exit_code;
         }
-        //TO-DO: <body>
-
+        parser->exit_code = body(parser); //process <body>
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = prog(parser); //process <prog>
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
 
     //GLOBAL
     } else if (is_kword(parser, 4)) {
@@ -226,12 +279,34 @@ int prog(Parser parser) {
         token_kword(3); // we found FUNCTION after :
         get_token();
         token_ttype(14); // we found ( after ID
-        //TO-DO: process <type>
+        parser->exit_code = type(parser); //process <type>
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = return_type(parser); //process <return_type>
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = prog(parser); //process <prog>
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    
+    
     //ID
     } else if (is_utype(parser, 3)) {
         get_token();
         token_ttype(14); // we found ( after ID
-        //TO-DO: process <args>
+        parser->exit_code = args(parser); //process <args>
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        
+        parser->exit_code = prog(parser); //process <prog>
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    
     } else {
         return PARSER_ERR;
     }
@@ -304,3 +379,619 @@ int return_type_2(Parser parser) {
     }
     return parser->exit_code;
 }//end of return_type_2()
+
+int type(Parser parser) {
+    get_token();
+    if (is_ttype(parser, 15)) { //token is )
+        return 0;
+    } else if (is_int_num_str(parser)) { //token is INT/NUM/STR
+        return type_2(parser);
+    } else {
+        return PARSER_ERR;
+    }
+    return 0;
+}//end of type()
+
+int type_2(Parser parser) {
+    get_token();
+    if (is_ttype(parser, 15)) { //token is )
+        return 0;
+    } else if (is_ttype(parser, 12)) { // ,
+        get_token();
+        token_int_num_str(); // is it integer,number or string?
+        parser->exit_code = type_2(parser);
+    } else {
+        return PARSER_ERR;
+    }
+    return parser->exit_code;
+}//end of type_2()
+
+int args(Parser parser) {
+    get_token();
+    if (is_ttype(parser, 15)) { //token is )
+        return 0;
+    } else if (is_utype(parser, 3)) { // <value> -> ID
+        return args_2(parser);
+    } else if (is_ttype(parser, 13)) { // <value> -> INT
+        return args_2(parser);
+    } else if (is_ttype(parser, 37)) { // <value> -> NUMBER(double)
+        return args_2(parser);
+    } else if (is_ttype(parser, 29)) { // <value> -> STRING
+        return args_2(parser);
+    } else {
+        return PARSER_ERR;
+    }
+    return 0;
+}//end of args()
+
+int args_2(Parser parser) {
+    get_token();
+    if (is_ttype(parser, 15)) { //token is )
+        return 0;
+    } else if (is_ttype(parser, 12)) {// ,
+        get_token();
+        if (is_utype(parser, 3)) { // <value> -> ID
+            parser->exit_code = args_2(parser);
+        } else if (is_utype(parser, 13)) { // <value> -> INT
+            parser->exit_code = args_2(parser);
+        } else if (is_utype(parser, 37)) { // <value> -> NUMBER(double)
+            parser->exit_code = args_2(parser);
+        } else if (is_utype(parser, 29)) { // <value> -> STRING
+            parser->exit_code = args_2(parser);
+        } else {
+            return PARSER_ERR;
+        }
+    } else {
+        return PARSER_ERR;
+    }
+    return parser->exit_code;
+}//end of args_2()
+
+int body(Parser parser) {
+    get_token();
+    if (is_kword(parser, 2)) {  //end
+        return 0;
+    /////////////////////////////////////////////
+    } else if (is_kword(parser, 5)) {   //if
+        parser->exit_code = expression_if(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_if(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_else(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    /////////////////////////////////////////////
+    } else if (is_kword(parser, 14)) {  //while
+        parser->exit_code = expression_while(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_while(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        } 
+        parser->exit_code = body(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    /////////////////////////////////////////////
+    } else if (is_kword(parser, 12)) {  //return
+        parser->exit_code = expression_return(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        get_token();
+         if (is_kword(parser, 2)) {  //end
+            return 0; 
+        } else {
+            return PARSER_ERR;
+        }
+    /////////////////////////////////////////////
+    } else if (is_utype(parser, 3)) {  //id
+        get_token();
+        if (is_ttype(parser, 14)) {   // (
+            parser->exit_code = args(parser);
+            if (parser->exit_code != 0) {
+                return parser->exit_code;
+            }
+        } else if (is_ttype(parser, 12)) { // ,
+            parser->exit_code = id(parser);
+            if (parser->exit_code != 0) {
+                return parser->exit_code;
+            }
+        } else if (is_ttype(parser, 41)) { // =
+            //expression
+            while(1) {
+                get_token_EOL_gut();
+                //isID()
+                //search-bintree -> ID value
+                //push_stack
+                if (is_ttype(parser, 2)) {
+                    //parser->exit_code = eval(stack)
+                    // if (exit_code != 0) return exitcode
+                    break;
+                }
+            }
+            //return 0;
+        } else {
+            return PARSER_ERR;
+        }
+        parser->exit_code = body(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+
+    /////////////////////////////////////////////
+    } else if (is_kword(parser, 9)) {   //local
+        get_token();
+        token_isID();   // is ID
+        get_token();
+        token_ttype(20); // is :
+        parser->exit_code = assign(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    } else {
+        return PARSER_ERR;
+    }
+
+    return 0;
+}
+
+int body_if(Parser parser) {
+    get_token();
+    if (is_kword(parser,1)){   //else
+        return 0;
+    } else if (is_kword(parser, 5)) {   //if
+        parser->exit_code = expression_if(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_if(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_else(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+
+        parser->exit_code = body(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    } else if (is_kword(parser, 14)) {  //while
+        parser->exit_code = expression_while(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_while(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        } 
+        parser->exit_code = body(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    } else if (is_kword(parser, 12)) {  //return
+        parser->exit_code = expression_return(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        get_token();
+        if (is_kword(parser,1)){   //else
+            return 0;
+        } else {
+            return PARSER_ERR;
+        }
+        //printf("is return\n");
+    } else if (is_utype(parser, 3)) {  //id
+        get_token();
+        if (is_ttype(parser, 14)) {   // (
+            parser->exit_code = args(parser);
+            if (parser->exit_code != 0) {
+                return parser->exit_code;
+            }
+        } else if (is_ttype(parser, 12)) { // ,
+            parser->exit_code = id(parser);
+            if (parser->exit_code != 0) {
+                return parser->exit_code;
+            }
+        } else if (is_ttype(parser, 41)) { // =
+            //expression
+            while(1) {
+                get_token_EOL_gut();
+                //isID()
+                //search-bintree -> ID value
+                //push_stack
+                if (is_ttype(parser, 2)) {
+                    //parser->exit_code = eval(stack)
+                    // if (exit_code != 0) return exitcode
+                    break;
+                }
+            }
+        } else {
+            return PARSER_ERR;
+        }
+        parser->exit_code = body_if(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    } else if (is_kword(parser, 9)) {   //local
+        get_token();
+        token_isID();   // is ID
+        get_token();
+        token_ttype(20); // is :
+        parser->exit_code = assign(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_if(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    } else {
+        return PARSER_ERR;
+    }
+    return 0;
+}
+
+int body_else(Parser parser) {
+    get_token();
+    if (is_kword(parser, 2)) {  //end
+        return 0;
+    } else if (is_kword(parser, 5)) {   //if
+        parser->exit_code = expression_if(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_if(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_else(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    } else if (is_kword(parser, 14)) {  //while
+        parser->exit_code = expression_while(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_while(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        } 
+        parser->exit_code = body(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    } else if (is_kword(parser, 12)) {  //return
+        //printf("is return\n");
+        parser->exit_code = expression_return(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        get_token();
+        if (is_kword(parser, 2)) {  //end
+            return 0;
+        } else {
+            return PARSER_ERR;
+        }
+    } else if (is_utype(parser, 3)) {  //id
+        get_token();
+        if (is_ttype(parser, 14)) {   // (
+            parser->exit_code = args(parser);
+            if (parser->exit_code != 0) {
+                return parser->exit_code;
+            }
+        } else if (is_ttype(parser, 12)) { // ,
+            parser->exit_code = id(parser);
+            if (parser->exit_code != 0) {
+                return parser->exit_code;
+            }
+        } else if (is_ttype(parser, 41)) { // =
+            //expression
+            while(1) {
+                get_token_EOL_gut();
+                //isID()
+                //search-bintree -> ID value
+                //push_stack
+                if (is_ttype(parser, 2)) {
+                    //parser->exit_code = eval(stack)
+                    // if (exit_code != 0) return exitcode
+                    break;
+                }
+            }
+        } else {
+            return PARSER_ERR;
+        }
+        parser->exit_code = body_else(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }    
+        } else if (is_kword(parser, 9)) {   //local
+        get_token();
+        token_isID();   // is ID
+        get_token();
+        token_ttype(20); // is :
+        parser->exit_code = assign(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_else(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    } else {
+        return PARSER_ERR;
+    }
+
+    return 0;
+}
+
+int body_while(Parser parser) {
+    get_token();
+    if (is_kword(parser, 2)) {  //end
+        return 0;
+    /////////////////////////////////////////////
+    } else if (is_kword(parser, 5)) {   //if
+        parser->exit_code = expression_if(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_if(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_else(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    /////////////////////////////////////////////
+    } else if (is_kword(parser, 14)) {  //while
+        parser->exit_code = expression_while(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_while(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        } 
+        parser->exit_code = body(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    /////////////////////////////////////////////
+    } else if (is_kword(parser, 12)) {  //return
+        parser->exit_code = expression_return(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        get_token();
+        if (is_kword(parser, 2)) {  //end
+            return 0;
+        } else {
+            return PARSER_ERR;
+        }
+    /////////////////////////////////////////////
+    } else if (is_utype(parser, 3)) {  //id
+        get_token();
+        if (is_ttype(parser, 14)) {   // (
+            parser->exit_code = args(parser);
+            if (parser->exit_code != 0) {
+                return parser->exit_code;
+            }
+        } else if (is_ttype(parser, 12)) { // ,
+            parser->exit_code = id(parser);
+            if (parser->exit_code != 0) {
+                return parser->exit_code;
+            }
+        } else if (is_ttype(parser, 41)) { // =
+            //expression
+            while(1) {
+                get_token_EOL_gut();
+                //isID()
+                //search-bintree -> ID value
+                //push_stack
+                if (is_ttype(parser, 2)) {
+                    //parser->exit_code = eval(stack)
+                    // if (exit_code != 0) return exitcode
+                    break;
+                }
+            }
+        } else {
+            return PARSER_ERR;
+        }
+        parser->exit_code = body_while(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    
+    /////////////////////////////////////////////
+    } else if (is_kword(parser, 9)) {   //local
+        get_token();
+        token_isID();   // is ID
+        get_token();
+        token_ttype(20); // is :
+        parser->exit_code = assign(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+        parser->exit_code = body_while(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    } else {
+        return PARSER_ERR;
+    }
+    return 0;
+}
+
+int expression_if(Parser parser) {
+    while(1) {
+        get_token();
+        //isID()
+        //search-bintree -> ID value
+        //push_stack
+        if (is_kword(parser, 13)) {
+            //parser->exit_code = eval(stack)
+            // if (exit_code != 0) return exitcode
+            break;
+        }
+    }
+    return 0;
+}
+
+int expression_while(Parser parser) {
+    while(1) {
+        get_token();
+        //isID()
+        //search-bintree -> ID value
+        //push_stack
+        if (is_kword(parser, 0)) {
+            //parser->exit_code = eval(stack)
+            // if (exit_code != 0) return exitcode
+            break;
+        }
+    }
+    return 0;
+}
+
+int expression_return(Parser parser) {
+    while(1) {
+        get_token_EOL_gut();
+        //isID()
+        //search-bintree -> ID value
+        //push_stack
+        if (is_ttype(parser, 2)) {
+            //parser->exit_code = eval(stack)
+            // if (exit_code != 0) return exitcode
+            break;
+        }
+    }
+    return 0;
+}
+
+int assign(Parser parser) {
+    get_token();
+    token_int_num_str_nil(); 
+    get_token_EOL_gut();
+    if (is_ttype(parser, 2)) { // EOL
+        return 0; 
+    }
+    if (is_ttype(parser, 41)) { // =
+        get_token();
+        if (is_utype(parser, 3)) { //ID
+            get_token_EOL_gut();    // has to be EOL
+            if (is_ttype(parser, 14)) {// (
+                parser->exit_code = args(parser);
+                if (parser->exit_code != 0) {
+                    return parser->exit_code;
+                }
+                return 0;
+            }
+            if (is_ttype(parser, 2)) { // EOL
+                return 0; 
+            }
+            return PARSER_ERR;
+        } else if (is_ttype(parser, 13)) { //INT value
+            get_token_EOL_gut();    // has to be EOL
+            if (is_ttype(parser, 2)) { // EOL
+                return 0; 
+            }
+            return PARSER_ERR;
+        } else if (is_ttype(parser, 37)) { //NUMBER value
+            get_token_EOL_gut();    // has to be EOL
+            if (is_ttype(parser, 2)) { // EOL
+                return 0; 
+            }
+            return PARSER_ERR;
+        } else if (is_ttype(parser, 29)) { // STRING value 
+            get_token_EOL_gut();    // has to be EOL
+            if (is_ttype(parser, 2)) { // EOL
+                return 0; 
+            }
+            return PARSER_ERR;
+        } else if (is_kword(parser, 10)) { // NIL value
+            get_token_EOL_gut();    // has to be EOL
+            if (is_ttype(parser, 2)) { // EOL
+                return 0; 
+            }
+            return PARSER_ERR;
+        } else {
+            //expression
+            /*
+            while(1) {
+                get_token_EOL_gut();
+                //isID()
+                //search-bintree -> ID value
+                //push_stack
+                if (is_ttype(parser, 2)) {
+                    //parser->exit_code = eval(stack)
+                    // if (exit_code != 0) return exitcode
+                    break;
+                }
+            }
+            return 0;
+            */
+           return PARSER_ERR;
+        }
+    } else {
+        return PARSER_ERR;
+    }
+    return 0;
+}
+
+int id(Parser parser) {
+    get_token();
+    token_isID();
+    get_token();
+    if (is_ttype(parser, 12)) {// ,
+        parser->exit_code = id(parser);
+        if (parser->exit_code != 0) {
+            return parser->exit_code;
+        }
+    } else if (is_ttype(parser, 41)){ // =
+        //expression
+            while(1) {
+                get_token_EOL_gut();
+                //isID()
+                //search-bintree -> ID value
+                //push_stack
+                if (is_ttype(parser, 2)) {
+                    //parser->exit_code = eval(stack)
+                    // if (exit_code != 0) return exitcode
+                    break;
+                }
+            }
+            return 0;
+    } else {
+        return PARSER_ERR;
+    }
+    return 0;
+}
+
+
+//term = INT, DOUBLE(number), STRING, NIL, ID

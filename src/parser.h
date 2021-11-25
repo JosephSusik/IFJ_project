@@ -27,13 +27,10 @@ typedef struct parser {
     int exit_code;
 } * Parser;
 
-
-
-
-
 int is_utype(Parser parser, int utype);
 int is_kword(Parser parser, int kword_2);
 int is_ttype(Parser parser, int type);
+int is_int_num_str(Parser parser);
 
 
 
@@ -46,6 +43,30 @@ int params(Parser parser);
 int params_2(Parser parser);
 int return_type(Parser parser);
 int return_type_2(Parser parser);
+int type(Parser parser);
+int type_2(Parser parser);
+int args(Parser parser);
+int args_2(Parser parser);
+int body(Parser parser);
+
+int body_if(Parser parser);
+int body_else(Parser parser);
+int body_while(Parser parser);
+
+
+
+int expression_if(Parser parser);
+int expression_while(Parser parser);
+int expression_return(Parser parser);
+int assign(Parser parser);
+int id(Parser parser);
+
+
+
+
+
+
+
 int parse();
 
 

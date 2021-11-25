@@ -1,8 +1,11 @@
+-- Hello World example in IFJ21
+-- run it on Merlin by: tl run hello.tl
+
 require "ifj21"
 
-function id ( id : string , id : integer , pes : number ) : integer
+function hlavni_program(year : integer)
+  write("Hello from IFJ\n")
+end
 
---global id : function (
---id(
-
-
+hlavni_program(21)
+hlavni_program(22) -- pozdrav z budoucnosti

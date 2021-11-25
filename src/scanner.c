@@ -171,7 +171,10 @@ int getNextToken(Token *token) {
                 if (c == '\n') {                        // newline
                     State = TOKEN_TYPE_EOL;
                 } else if (isspace(c) || (c == '\t')) { //space or tab
-                    State = TOKEN_TYPE_START;
+                    token->ttype = TOKEN_TYPE_EMPTY; 
+                    //printf("space\n");
+                    return free_memory(OK, string_2);
+                    //State = TOKEN_TYPE_START;
                 } else if (c == EOF) {                  //end of file
                     token->ttype = TOKEN_TYPE_EOF; 
                     return free_memory(OK, string_2);   
@@ -253,6 +256,7 @@ int getNextToken(Token *token) {
                     token->ttype = TOKEN_TYPE_EQUALS;
                 } else {
                     ungetc(c, source_file);
+                    token->ttype = TOKEN_TYPE_ASSIGN;
                 }
                 return free_memory(OK, string_2);
 
@@ -277,12 +281,18 @@ int getNextToken(Token *token) {
                     return free_memory(SCANNER_ERR, string_2);
                 } 
                 if (c == '"') {
-                    token->ttype = TOKEN_TYPE_STRING;
-                    token->tuniontype = 5;
-                    if(string_copy(token->tvalue.string, string_2) == 1){
-                        return free_memory(INTERNAL_ERR, string_2);
+                    c = (char)getc(source_file);
+                    if (isspace(c) || c == ')') {
+                        ungetc(c, source_file);
+                        token->ttype = TOKEN_TYPE_STRING;
+                        token->tuniontype = 5;
+                        if(string_copy(token->tvalue.string, string_2) == 1){
+                            return free_memory(INTERNAL_ERR, string_2);
+                        }
+                        return free_memory(OK, string_2);
+                    } else {
+                        return free_memory(SCANNER_ERR, string_2);
                     }
-                    return free_memory(OK, string_2);
                 } else if (c == '\\') {
                     State = TOKEN_TYPE_STRING_ESCAPE;
                 } else {
@@ -429,6 +439,7 @@ int getNextToken(Token *token) {
                     }
                     State = TOKEN_TYPE_EXPONENT_EXPONENT;
                 } else {
+                    ungetc(c, source_file);
                     return double_number(string_2, token);
                 }
                 break;
@@ -466,6 +477,12 @@ int getNextToken(Token *token) {
                         return free_memory(OK, string_2);
                     } else if (c == ',') {
                         ungetc(c, source_file);
+                        if(is_string_keyword(string_2, token) != 0) {
+                            return free_memory(INTERNAL_ERR, string_2);
+                        }
+                        return free_memory(OK, string_2);
+                    } else if (c == EOF) {
+                        ungetc(c, source_file); 
                         if(is_string_keyword(string_2, token) != 0) {
                             return free_memory(INTERNAL_ERR, string_2);
                         }
@@ -552,6 +569,7 @@ int getNextToken(Token *token) {
             case TOKEN_TYPE_MORE_EQ:
             case TOKEN_TYPE_STRING:
             case TOKEN_TYPE_STRING_ESCAPE_ONE:
+            case TOKEN_TYPE_ASSIGN:
                 break;
         } //End of switch(state)
     } //End of while(1)
