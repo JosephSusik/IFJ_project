@@ -18,14 +18,16 @@
 int main(int argc, char* argv[]) {
 	
 	FILE *f;
+	/*
 	if (argc == 1) {
 		printf("Není zadán vstupní soubor!\n");
 		return 99;
 	}
-
+	*/
 	if ((f= fopen(argv[1], "r")) == NULL) {
-		printf("Soubor se nepodarilo otevrit\n");
-      	return 99;
+		//printf("Soubor se nepodarilo otevrit\n");
+      	//return 99;
+		f = stdin;
 	}
 
 
