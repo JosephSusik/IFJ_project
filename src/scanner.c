@@ -183,7 +183,7 @@ int getNextToken(Token *token) {
                 } else if (c == '>') {                  // > 
                     State = TOKEN_TYPE_MORE;
                 } else if (c == '=') {                  // =
-                    State = TOKEN_TYPE_EQUALS;
+                    State = TOKEN_TYPE_ASSIGN;//TOKEN_TYPE_EQUALS;
                 } else if (c == '+') {                  // +
                     token->ttype = TOKEN_TYPE_PLUS;
                     return free_memory(OK, string_2);
@@ -251,7 +251,7 @@ int getNextToken(Token *token) {
                 }
                 return free_memory(OK, string_2);
             
-            case TOKEN_TYPE_EQUALS:
+            case TOKEN_TYPE_ASSIGN://TOKEN_TYPE_EQUALS:
                 if (c == '=') {
                     token->ttype = TOKEN_TYPE_EQUALS;
                 } else {
@@ -346,7 +346,7 @@ int getNextToken(Token *token) {
                     return free_memory(SCANNER_ERR, string_2);
                 }
                 break;
-            
+
             case TOKEN_TYPE_STRING_ESCAPE_WRITE:
                 escape_number = (escape_one - 48) * 100 + (escape_two - 48) * 100 + (escape_three - 48) * 100;
                 if (string_add_char(string_2, (char)escape_number) != 0) {
@@ -552,8 +552,8 @@ int getNextToken(Token *token) {
                 token->ttype = TOKEN_TYPE_EOL;
                 return free_memory(OK, string_2);
             
-            case TOKEN_TYPE_EOF:
-            case TOKEN_TYPE_EMPTY:
+            case TOKEN_TYPE_EOF: //
+            case TOKEN_TYPE_EMPTY: // 
             case TOKEN_TYPE_KEYWORD:
             case TOKEN_TYPE_LETTER:
             case TOKEN_TYPE_PLUS:
@@ -565,11 +565,11 @@ int getNextToken(Token *token) {
             case TOKEN_TYPE_RIGHT_PAR:
             case TOKEN_TYPE_DIVISION_INT:
             case TOKEN_TYPE_COLONS:
-            case TOKEN_TYPE_LESS_EQ:
-            case TOKEN_TYPE_MORE_EQ:
+            case TOKEN_TYPE_LESS_EQ: //
+            case TOKEN_TYPE_MORE_EQ: // 
             case TOKEN_TYPE_STRING:
             case TOKEN_TYPE_STRING_ESCAPE_ONE:
-            case TOKEN_TYPE_ASSIGN:
+            case TOKEN_TYPE_EQUALS://TOKEN_TYPE_ASSIGN:
                 break;
         } //End of switch(state)
     } //End of while(1)

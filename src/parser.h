@@ -25,10 +25,16 @@
 typedef struct parser {
     Token token;
     int exit_code;
+    int _if;
+    int _else;
+    int _while;
+    bool end;   // if end
+    bool wend;  //while end
 } * Parser;
 
 int is_utype(Parser parser, int utype);
-int is_kword(Parser parser, int kword_2);
+//int is_kword(Parser parser, int kword_2);
+int is_kword(Parser parser, Keyword kword_2);
 int is_ttype(Parser parser, int type);
 int is_int_num_str(Parser parser);
 

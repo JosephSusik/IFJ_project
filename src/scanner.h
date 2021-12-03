@@ -21,7 +21,7 @@
 
 //Keywords
 typedef enum {
-    KEYWORD_DO,
+    KEYWORD_DOD,
     KEYWORD_ELSE,
     KEYWORD_END,
     KEYWORD_FUNCTION,
@@ -35,7 +35,8 @@ typedef enum {
     KEYWORD_REQUIRE,
     KEYWORD_RETURN,
     KEYWORD_THEN,
-    KEYWORD_WHILE
+    KEYWORD_WHILE,
+    KEYWORD_DO,
 } Keyword;
 
 typedef enum {

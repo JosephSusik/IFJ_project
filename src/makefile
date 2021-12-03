@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -std=c99 -Wall -Wextra
 
-FILES = main.o my_string.o scanner.o parser.o code_generator.o
+FILES = main.o my_string.o scanner.o parser.o code_generator.o symtable.o stack.o
 
 all: build
 
@@ -22,6 +22,12 @@ parser.o: parser.c parser.h scanner.h error.h code_generator.h
 
 code_generator.o: code_generator.c
 	$(CC) $(CFLAGS) -c code_generator.c
+
+symtable.o: symtable.c symtable.h my_string.h
+	$(CC) $(CFLAGS) -c symtable.c
+
+stack.o: stack.c stack.h 
+	$(CC) $(CFLAGS) -c stack.c
 
 clean:
 	rm -f *.o project
