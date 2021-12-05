@@ -160,10 +160,12 @@ Parser init_parser() {
     parser->_while = 0;
     parser->end = false;
     parser->wend = false;
+    symtable_init(&parser->global_symtable);
     return parser;
 }
 
 int free_parser(Parser parser) {
+    symtable_dispose(&parser->global_symtable);
     free(parser);
     return OK;
 }
@@ -248,6 +250,16 @@ int prog(Parser parser) {
     if (is_kword(parser, 3)) {
         get_token();
         token_isID(); // we found ID after FUNCTION
+        //Check it function is defined
+        if(symtable_search(&parser->global_symtable, parser->token.tvalue.string) != NULL) {
+            if (parser->global_symtable.root->func_data->defined == true) {
+                return UNDEFINED_VAR_ERR;
+            }
+        }
+
+        //symtable_insert(&parser->global_symtable, parser->token.tvalue.string, func);
+        //parser->func_name = parser->token.tvalue.string;
+
         /*
         -Search global symtable if its already declared or even defined -> if defined errror
         -save function name into variable?

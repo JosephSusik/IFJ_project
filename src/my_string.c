@@ -67,6 +67,11 @@ int string_cmp(String *s, const char *keyword_string){
     return strcmp(s->str, keyword_string);
 }
 
+int string_string_cmp(String *s, String *s2) {
+    return strcmp(s->str, s2->str);
+}
+
+
 void string_print(String *s) {
     for(int i = 0; i < s->length; i++) {
         printf("%c", s->str[i]);

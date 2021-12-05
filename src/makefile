@@ -17,13 +17,13 @@ my_string.o: my_string.c my_string.h
 scanner.o: scanner.c scanner.h my_string.h error.h
 	$(CC) $(CFLAGS) -c scanner.c
 
-parser.o: parser.c parser.h scanner.h error.h code_generator.h
+parser.o: parser.c parser.h scanner.h error.h code_generator.h symtable.h
 	$(CC) $(CFLAGS) -c parser.c
 
 code_generator.o: code_generator.c
 	$(CC) $(CFLAGS) -c code_generator.c
 
-symtable.o: symtable.c symtable.h my_string.h
+symtable.o: symtable.c symtable.h my_string.h error.h
 	$(CC) $(CFLAGS) -c symtable.c
 
 stack.o: stack.c stack.h 

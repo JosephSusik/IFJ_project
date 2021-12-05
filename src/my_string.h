@@ -28,6 +28,7 @@ void string_free(String *s);
 void string_clear(String *s);
 int string_add_char(String *s, char c);
 int string_cmp(String *s, const char *keyword_string);
+int string_string_cmp(String *s, String *s2);
 void string_print(String *s);
 int string_copy(String *s1, String *s2);
 

@@ -1,11 +1,12 @@
 /***************************************
 * Project - Compiler for IFJ21
 *
-* @brief Implementation of symtable (BST)
+* @brief Symtable for IFJ21
 *
 * @author Josef Susík <xsusik00>
 * @author Marek Putala <xputal00>
 * @author Samuel Popelář <xpopel22>
+* 
 *
 * @file symtable.h
 **************************************/
@@ -13,45 +14,54 @@
 #ifndef SYMTABLE_H
 #define SYMTABLE_H
 
+#include "my_string.h"
+#include "error.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "my_string.h"
-#include "scanner.h"
 
-typedef struct data_func {
+typedef enum {
+    var,
+    func
+} node_type;
+
+typedef struct function_data_struct {
     bool declared;
     bool defined;
     int num_params;
     int num_return;
-    char *pole_params; //pole[int, string, int]
-    char *pole_return; 
-    struct symtable *local_symtable;
-} *tData_func;
-
-typedef struct data_var {
-    String data_type;
-    Token_value value;
-} *tData_var;
-
+    char *pole_params;
+    char *pole_returns;
+} function_data;
 
 typedef struct node {
-    String id; //Name of the function/variable, key
-    struct data_func *tdataf; //data about the function
-    struct data_var *tdatav; //data about the function
-    struct node *left;
-    struct node *right;
-} *tNode;
+    String *key; //key, probably id token->tvalue->string
+    node_type type; // is it var (0) or function (1)
+    function_data *func_data; // data about function
+    struct node *lptr; //left pointer
+    struct node *rptr; //right pointer
+} *nodeptr;
 
-typedef struct symtable {
-    tNode *root;
-} tSymtable;
-
-void init_symtable(tSymtable *symtable);
-tNode insert_var(tNode *root, Token token);
-tNode insert_func(tNode *root, Token token);
+typedef struct symtable_struct {
+    nodeptr root;
+} symtable;
 
 
+void tree_init(nodeptr *root);
+nodeptr tree_search(nodeptr root, String *k);
+void tree_insert(nodeptr *root, String *k, node_type type, function_data *data);
+void ReplaceByRightmost (nodeptr ptr_replaced, nodeptr *root);
+void tree_delete(nodeptr *root, String *k);
+void tree_dispose(nodeptr *root);
+
+void symtable_init(symtable *sroot);
+nodeptr symtable_search(symtable *sroot, String *k);
+void symtable_insert(symtable *sroot, String *k, node_type type); //need to pass more params, prob
+void symtable_delete(symtable *sroot, String *k);
+void symtable_dispose(symtable *sroot);
+
+//TO-DO: add pointer to local tree/symtable, more params symtable_insert
 
 
 #endif //SYMTABLE_H
+

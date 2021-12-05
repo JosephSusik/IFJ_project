@@ -21,6 +21,7 @@
 #include "scanner.h"
 #include "error.h"
 #include "code_generator.h"
+#include "symtable.h"
 
 typedef struct parser {
     Token token;
@@ -30,6 +31,7 @@ typedef struct parser {
     int _while;
     bool end;   // if end
     bool wend;  //while end
+    symtable global_symtable;
 } * Parser;
 
 int is_utype(Parser parser, int utype);
