@@ -292,7 +292,7 @@ int prog(Parser parser) {
             stack_pop(&parser->tmp_stack);
         }
         */
-        printf("%d\n", parser->num_params);
+        printf("Number of parameters: %d\n", parser->num_params);
         while(parser->tmp_stack.top != NULL) {
             string_print(&parser->tmp_stack.top->data);
             printf("\n");
