@@ -34,7 +34,8 @@ int stack_push(stack *Stack, String d) {
         return INTERNAL_ERR;
     }
 
-    tmp->data = d;
+    string_init(&tmp->data);
+    string_copy(&tmp->data, &d);
     tmp->next = Stack->top;
     Stack->top = tmp;
 //    string_print(&Stack->top->data);
