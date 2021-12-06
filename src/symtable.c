@@ -126,7 +126,7 @@ nodeptr symtable_search(symtable *sroot, String *k) {
     return tree_search(sroot->root, k);
 }
 
-void symtable_insert(symtable *sroot, String *k, node_type type) {
+void symtable_insert(symtable *sroot, String *k, node_type type, bool decl, bool def, int params, int returns) {
     if (type == func) { // its function
         // TO-DO: pass arrays of num params,  ret params, num params, num return, defined, declared
         
@@ -139,12 +139,19 @@ void symtable_insert(symtable *sroot, String *k, node_type type) {
             return;
         }
 
-        tmp_data->declared = false;
-        tmp_data->defined = false;
-        tmp_data->num_params = 0;
-        tmp_data->num_return = 0;
-        tmp_data->pole_params = NULL; //?
-        tmp_data->pole_returns = NULL; //?
+        tmp_data->declared = decl;
+        tmp_data->defined = def;
+        tmp_data->num_params = params;
+        tmp_data->num_return = returns;
+        //tmp_data->pole_params = NULL; //?
+        //tmp_data->pole_returns = NULL; //?
+        if (tmp_data->stack_params.top == NULL) {
+            stack_init(&tmp_data->stack_params);
+        }
+        if (tmp_data->stack_returns.top == NULL) {
+            stack_init(&tmp_data->stack_returns);
+        }
+
         tree_insert(&(sroot->root), k, type, tmp_data);
         
         

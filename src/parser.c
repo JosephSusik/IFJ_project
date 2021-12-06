@@ -161,11 +161,19 @@ Parser init_parser() {
     parser->end = false;
     parser->wend = false;
     symtable_init(&parser->global_symtable);
+    string_init(&parser->func_id);
+    parser->num_params = 0;
+    parser->num_return = 0;
+    stack_init(&parser->tmp_stack);
+    string_init(&parser->tmp_string);
     return parser;
 }
 
 int free_parser(Parser parser) {
     symtable_dispose(&parser->global_symtable);
+    string_free(&parser->func_id);
+    stack_dispose(&parser->tmp_stack);
+    string_free(&parser->tmp_string);
     free(parser);
     return OK;
 }
@@ -256,21 +264,41 @@ int prog(Parser parser) {
                 return UNDEFINED_VAR_ERR;
             }
         }
+        //save func id to parser->func_id
+        string_copy(&parser->func_id,parser->token.tvalue.string);
+        //string_print(&parser->func_id);
 
-        //symtable_insert(&parser->global_symtable, parser->token.tvalue.string, func);
-        //parser->func_name = parser->token.tvalue.string;
+        //create function, so the stacks get initialized, then just fill them with values
+        //and insert num_params and return later
+        symtable_insert(&parser->global_symtable, parser->token.tvalue.string, func, true, true, 0, 0);
 
         /*
         -Search global symtable if its already declared or even defined -> if defined errror
         -save function name into variable?
         -load next params into stack
         */
+
+        //stack_push(&parser->params_stack, parser->token.tvalue.string + type);
         get_token();
         token_ttype(14); // we found ( after ID
         parser->exit_code = params(parser); //process <params>
         if (parser->exit_code != 0) {
             return parser->exit_code;
         }
+        /*
+        //reverse params into right stack
+        while(parser->tmp_stack.top != NULL) {
+            stack_push(&parser->global_symtable.root->func_data->stack_params, stack_top(parser->tmp_stack));
+            stack_pop(&parser->tmp_stack);
+        }
+        */
+        printf("%d\n", parser->num_params);
+        while(parser->tmp_stack.top != NULL) {
+            string_print(&parser->tmp_stack.top->data);
+            printf("\n");
+            stack_pop(&parser->tmp_stack);
+        }
+
         /*
         -load return params into stack
         */
@@ -279,9 +307,20 @@ int prog(Parser parser) {
             return parser->exit_code;
         }
         /*
+        reverse return into right stack
+        while(parser->tmp_stack.top != NULL) {
+            stack_push(parser->global_symtable.root->func_data->stack_return, stack_top(parser->tmp_stack));
+            stack_pop(parser->tmp_stack);
+        }
+        */
+      
+        /*
         -assuming everything is OK, insert function into global symtable with params, and ret, params
         -and create new local symtable?
+        parser->num_params = 0;
+        parser->num_return = 0;
         */
+        
         parser->exit_code = body(parser); //process <body>
         if (parser->exit_code != 0) {
             return parser->exit_code;
@@ -368,9 +407,15 @@ int params(Parser parser) {
         return 0;
     } else if (is_utype(parser, 3)) { // ID
         get_token();
+        //copy param id into tmp_string
+        string_copy(&parser->tmp_string, parser->token.tvalue.string);
         token_ttype(20); // we found : after ID
         get_token();
         token_int_num_str(); // is it integer,number or string?
+
+        //push to stack - idealne [name:int/num/string]
+        stack_push(&parser->tmp_stack, parser->tmp_string);
+        parser->num_params++;
         return params_2(parser);
     } else {
         return PARSER_ERR;
@@ -386,10 +431,13 @@ int params_2(Parser parser) {
     } else if (is_ttype(parser, 12)) { // ,
         get_token();
         token_isID(); // we found ID
+        string_copy(&parser->tmp_string, parser->token.tvalue.string);
         get_token();
         token_ttype(20); // we found : after ID
         get_token();
         token_int_num_str(); // is it integer,number or string?
+        stack_push(&parser->tmp_stack, parser->tmp_string);
+        parser->num_params++;
         parser->exit_code = params_2(parser);
     } else {
         return PARSER_ERR;
@@ -405,6 +453,7 @@ int return_type(Parser parser) {
     } else if (is_ttype(parser, 20)) { // :
         get_token();
         token_int_num_str(); // is it integer,number or string?
+        parser->num_return++;
         return return_type_2(parser);
     } else {
         return PARSER_ERR;
@@ -420,6 +469,7 @@ int return_type_2(Parser parser) {
     } else if (is_ttype(parser, 12)) {  // ,
         get_token();
         token_int_num_str(); // is it integer,number or string?
+        parser->num_return++;
         parser->exit_code = return_type_2(parser);
     } else {
         return PARSER_ERR;

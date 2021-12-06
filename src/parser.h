@@ -22,6 +22,7 @@
 #include "error.h"
 #include "code_generator.h"
 #include "symtable.h"
+#include "stack.h"
 
 typedef struct parser {
     Token token;
@@ -32,10 +33,14 @@ typedef struct parser {
     bool end;   // if end
     bool wend;  //while end
     symtable global_symtable;
+    String func_id;
+    int num_params;
+    int num_return;
+    stack tmp_stack;
+    String tmp_string;
 } * Parser;
 
 int is_utype(Parser parser, int utype);
-//int is_kword(Parser parser, int kword_2);
 int is_kword(Parser parser, Keyword kword_2);
 int is_ttype(Parser parser, int type);
 int is_int_num_str(Parser parser);

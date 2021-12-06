@@ -16,6 +16,7 @@
 
 #include "my_string.h"
 #include "error.h"
+#include "stack.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -30,8 +31,10 @@ typedef struct function_data_struct {
     bool defined;
     int num_params;
     int num_return;
-    char *pole_params;
-    char *pole_returns;
+    //char *pole_params;
+    //char *pole_returns;
+    stack stack_params;
+    stack stack_returns;
 } function_data;
 
 typedef struct node {
@@ -56,7 +59,7 @@ void tree_dispose(nodeptr *root);
 
 void symtable_init(symtable *sroot);
 nodeptr symtable_search(symtable *sroot, String *k);
-void symtable_insert(symtable *sroot, String *k, node_type type); //need to pass more params, prob
+void symtable_insert(symtable *sroot, String *k, node_type type, bool decl, bool def, int params, int returns); //need to pass more params, prob
 void symtable_delete(symtable *sroot, String *k);
 void symtable_dispose(symtable *sroot);
 

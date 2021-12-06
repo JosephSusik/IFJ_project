@@ -23,13 +23,21 @@ int main(int argc, char* argv[]) {
 		printf("Není zadán vstupní soubor!\n");
 		return 99;
 	}
-	*/
+	
 	if ((f= fopen(argv[1], "r")) == NULL) {
 		//printf("Soubor se nepodarilo otevrit\n");
       	//return 99;
 		f = stdin;
 	}
+	*/
 
+	if (argc == 1) {
+		f = stdin;
+	} else if ((f= fopen(argv[1], "r")) == NULL) {
+		printf("Soubor se nepodarilo otevrit\n");
+		printf("Cteni z STDIN\n");
+		f = stdin;
+	}
 
 	setSourceFile(f);
 	String str;
