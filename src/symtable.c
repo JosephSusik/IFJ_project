@@ -153,6 +153,7 @@ void symtable_insert(symtable *sroot, String *k, node_type type, bool decl, bool
         }
         */
         if (param_s.top != NULL) {
+            //stack_dispose(&tmp_data->stack_params);
             stack_init(&tmp_data->stack_params);
             while(param_s.top != NULL) {
                 stack_push(&tmp_data->stack_params, param_s.top->data);
