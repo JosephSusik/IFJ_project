@@ -36,7 +36,9 @@ typedef struct parser {
     String func_id;
     int num_params;
     int num_return;
+    int num_types;
     stack tmp_stack;
+    stack tmp_stack_2;
     String tmp_string;
 } * Parser;
 

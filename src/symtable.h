@@ -59,7 +59,7 @@ void tree_dispose(nodeptr *root);
 
 void symtable_init(symtable *sroot);
 nodeptr symtable_search(symtable *sroot, String *k);
-void symtable_insert(symtable *sroot, String *k, node_type type, bool decl, bool def, int params, int returns); //need to pass more params, prob
+void symtable_insert(symtable *sroot, String *k, node_type type, bool decl, bool def, int params, int returns, stack param_s, stack ret_s); //need to pass more params, prob
 void symtable_delete(symtable *sroot, String *k);
 void symtable_dispose(symtable *sroot);
 

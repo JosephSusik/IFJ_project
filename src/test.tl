@@ -1,4 +1,16 @@
 require "ifj21"
 
-function main(a1:string, a2:number, a3:integer,a4:string, a5:number, a6:integer)
+--deklarace
+global franta : function(integer, string) : number
+
+--definice
+function franda(a1:integer, a2:string) : number
+
 end
+
+
+
+--[[
+function main(a1:string, a2:number) : integer, string, number
+end
+]]

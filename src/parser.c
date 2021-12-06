@@ -164,7 +164,9 @@ Parser init_parser() {
     string_init(&parser->func_id);
     parser->num_params = 0;
     parser->num_return = 0;
+    parser->num_types = 0;
     stack_init(&parser->tmp_stack);
+    stack_init(&parser->tmp_stack_2);
     string_init(&parser->tmp_string);
     return parser;
 }
@@ -173,6 +175,7 @@ int free_parser(Parser parser) {
     symtable_dispose(&parser->global_symtable);
     string_free(&parser->func_id);
     stack_dispose(&parser->tmp_stack);
+    //stack_dispose(&parser->tmp_stack_2);
     string_free(&parser->tmp_string);
     free(parser);
     return OK;
@@ -200,9 +203,9 @@ int parse() {
 
 
 
-
     
     free_parser(parser);
+
     return 0;
 }
 
@@ -259,24 +262,19 @@ int prog(Parser parser) {
         get_token();
         token_isID(); // we found ID after FUNCTION
         //Check it function is defined
-        if(symtable_search(&parser->global_symtable, parser->token.tvalue.string) != NULL) {
-            if (parser->global_symtable.root->func_data->defined == true) {
+        string_copy(&parser->func_id,parser->token.tvalue.string);
+        nodeptr a = symtable_search(&parser->global_symtable, &parser->func_id);
+        
+        if(a != NULL) {
+            if (a->func_data->defined == true) {
                 return UNDEFINED_VAR_ERR;
             }
         }
-        //save func id to parser->func_id
-        string_copy(&parser->func_id,parser->token.tvalue.string);
-        //string_print(&parser->func_id);
 
-        //create function, so the stacks get initialized, then just fill them with values
-        //and insert num_params and return later
-        symtable_insert(&parser->global_symtable, parser->token.tvalue.string, func, true, true, 0, 0);
 
-        /*
-        -Search global symtable if its already declared or even defined -> if defined errror
-        -save function name into variable?
-        -load next params into stack
-        */
+        stack nul;
+        stack_init(&nul);
+    
 
         //stack_push(&parser->params_stack, parser->token.tvalue.string + type);
         get_token();
@@ -284,19 +282,6 @@ int prog(Parser parser) {
         parser->exit_code = params(parser); //process <params>
         if (parser->exit_code != 0) {
             return parser->exit_code;
-        }
-        /*
-        //reverse params into right stack
-        while(parser->tmp_stack.top != NULL) {
-            stack_push(&parser->global_symtable.root->func_data->stack_params, stack_top(parser->tmp_stack));
-            stack_pop(&parser->tmp_stack);
-        }
-        */
-        printf("Number of parameters: %d\n", parser->num_params);
-        while(parser->tmp_stack.top != NULL) {
-            string_print(&parser->tmp_stack.top->data);
-            printf("\n");
-            stack_pop(&parser->tmp_stack);
         }
 
         /*
@@ -306,20 +291,25 @@ int prog(Parser parser) {
         if (parser->exit_code != 0) {
             return parser->exit_code;
         }
-        /*
-        reverse return into right stack
-        while(parser->tmp_stack.top != NULL) {
-            stack_push(parser->global_symtable.root->func_data->stack_return, stack_top(parser->tmp_stack));
-            stack_pop(parser->tmp_stack);
+        
+        if(a != NULL) {
+            if (a->func_data->declared == true) {
+                //compare stacks from a->data->top.data a parser->tmp_stack->data
+                //a->func_data->stack_params.top->data == parser->tmp_stack.top->data; //name:type
+                //if same, somehow reassign values to symtable_insert bellow
+                string_strtok(&parser->tmp_stack.top->data, ":", &parser->tmp_string);
+                //string_print(&parser->tmp_string);
+            }
         }
-        */
+
+
+
+        symtable_insert(&parser->global_symtable, &parser->func_id, func, true, true, parser->num_params, parser->num_return, parser->tmp_stack, parser->tmp_stack_2);
+
+        //THIS IS HOW U ACCESS NODE WITH NAME
+        //nodeptr b = symtable_search(&parser->global_symtable, &parser->func_id);
       
-        /*
-        -assuming everything is OK, insert function into global symtable with params, and ret, params
-        -and create new local symtable?
-        parser->num_params = 0;
-        parser->num_return = 0;
-        */
+    
         
         parser->exit_code = body(parser); //process <body>
         if (parser->exit_code != 0) {
@@ -334,25 +324,41 @@ int prog(Parser parser) {
     } else if (is_kword(parser, 4)) {
         get_token();
         token_isID(); // we found ID after GLOBAL
+
+        string_copy(&parser->func_id,parser->token.tvalue.string);
+        
+        nodeptr a = symtable_search(&parser->global_symtable, &parser->func_id);
+        
+        if(a != NULL) {
+            if (a->func_data->declared == true) {
+                return UNDEFINED_VAR_ERR;
+            }
+        }
+
+
         get_token();
         token_ttype(20); // we found : after ID
         get_token();
         token_kword(3); // we found FUNCTION after :
         get_token();
         token_ttype(14); // we found ( after ID
+
         parser->exit_code = type(parser); //process <type>
         if (parser->exit_code != 0) {
             return parser->exit_code;
         }
+
         parser->exit_code = return_type(parser); //process <return_type>
         if (parser->exit_code != 0) {
             return parser->exit_code;
         }
+
+        symtable_insert(&parser->global_symtable, &parser->func_id, func, true, false, parser->num_types, parser->num_return, parser->tmp_stack, parser->tmp_stack_2);
+
         parser->exit_code = prog(parser); //process <prog>
         if (parser->exit_code != 0) {
             return parser->exit_code;
         }
-    
     
     //ID
     } else if (is_utype(parser, 3)) {
@@ -406,14 +412,29 @@ int params(Parser parser) {
         //TO-DO: no arguments in function -> symtable
         return 0;
     } else if (is_utype(parser, 3)) { // ID
+        string_copy(&parser->tmp_string, parser->token.tvalue.string);
         get_token();
         //copy param id into tmp_string
-        string_copy(&parser->tmp_string, parser->token.tvalue.string);
         token_ttype(20); // we found : after ID
         get_token();
         token_int_num_str(); // is it integer,number or string?
-
-        //push to stack - idealne [name:int/num/string]
+        if (is_kword(parser, 6)) {  //int
+            string_add_char(&parser->tmp_string, ':');
+            string_add_char(&parser->tmp_string, 'i');
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 't');
+        } else if (is_kword(parser, 8)) {   //double
+            string_add_char(&parser->tmp_string, ':');
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 'u');
+            string_add_char(&parser->tmp_string, 'm');
+        } else if (is_kword(parser, 7)) {   //string
+            string_add_char(&parser->tmp_string, ':');
+            string_add_char(&parser->tmp_string, 's');
+            string_add_char(&parser->tmp_string, 't');
+            string_add_char(&parser->tmp_string, 'r');
+        }
+        //push to stack [name:int/num/string]
         stack_push(&parser->tmp_stack, parser->tmp_string);
         parser->num_params++;
         return params_2(parser);
@@ -436,6 +457,22 @@ int params_2(Parser parser) {
         token_ttype(20); // we found : after ID
         get_token();
         token_int_num_str(); // is it integer,number or string?
+        if (is_kword(parser, 6)) {  //int
+            string_add_char(&parser->tmp_string, ':');
+            string_add_char(&parser->tmp_string, 'i');
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 't');
+        } else if (is_kword(parser, 8)) {   //double
+            string_add_char(&parser->tmp_string, ':');
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 'u');
+            string_add_char(&parser->tmp_string, 'm');
+        } else if (is_kword(parser, 7)) {   //string
+            string_add_char(&parser->tmp_string, ':');
+            string_add_char(&parser->tmp_string, 's');
+            string_add_char(&parser->tmp_string, 't');
+            string_add_char(&parser->tmp_string, 'r');
+        }
         stack_push(&parser->tmp_stack, parser->tmp_string);
         parser->num_params++;
         parser->exit_code = params_2(parser);
@@ -452,8 +489,23 @@ int return_type(Parser parser) {
         return 0;
     } else if (is_ttype(parser, 20)) { // :
         get_token();
+        string_clear(&parser->tmp_string);
         token_int_num_str(); // is it integer,number or string?
+        if (is_kword(parser, 6)) {  //int
+            string_add_char(&parser->tmp_string, 'i');
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 't');
+        } else if (is_kword(parser, 8)) {   //double
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 'u');
+            string_add_char(&parser->tmp_string, 'm');
+        } else if (is_kword(parser, 7)) {   //string
+            string_add_char(&parser->tmp_string, 's');
+            string_add_char(&parser->tmp_string, 't');
+            string_add_char(&parser->tmp_string, 'r');
+        }
         parser->num_return++;
+        stack_push(&parser->tmp_stack_2, parser->tmp_string);
         return return_type_2(parser);
     } else {
         return PARSER_ERR;
@@ -468,8 +520,23 @@ int return_type_2(Parser parser) {
         return 0;
     } else if (is_ttype(parser, 12)) {  // ,
         get_token();
+        string_clear(&parser->tmp_string);
         token_int_num_str(); // is it integer,number or string?
+        if (is_kword(parser, 6)) {  //int
+            string_add_char(&parser->tmp_string, 'i');
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 't');
+        } else if (is_kword(parser, 8)) {   //double
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 'u');
+            string_add_char(&parser->tmp_string, 'm');
+        } else if (is_kword(parser, 7)) {   //string
+            string_add_char(&parser->tmp_string, 's');
+            string_add_char(&parser->tmp_string, 't');
+            string_add_char(&parser->tmp_string, 'r');
+        }
         parser->num_return++;
+        stack_push(&parser->tmp_stack_2, parser->tmp_string);
         parser->exit_code = return_type_2(parser);
     } else {
         return PARSER_ERR;
@@ -482,6 +549,22 @@ int type(Parser parser) {
     if (is_ttype(parser, 15)) { //token is )
         return 0;
     } else if (is_int_num_str(parser)) { //token is INT/NUM/STR
+        string_clear(&parser->tmp_string);
+        if (is_kword(parser, 6)) {  //int
+            string_add_char(&parser->tmp_string, 'i');
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 't');
+        } else if (is_kword(parser, 8)) {   //double
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 'u');
+            string_add_char(&parser->tmp_string, 'm');
+        } else if (is_kword(parser, 7)) {   //string
+            string_add_char(&parser->tmp_string, 's');
+            string_add_char(&parser->tmp_string, 't');
+            string_add_char(&parser->tmp_string, 'r');
+        }
+        stack_push(&parser->tmp_stack, parser->tmp_string);
+        parser->num_types++;
         return type_2(parser);
     } else {
         return PARSER_ERR;
@@ -496,6 +579,22 @@ int type_2(Parser parser) {
     } else if (is_ttype(parser, 12)) { // ,
         get_token();
         token_int_num_str(); // is it integer,number or string?
+        string_clear(&parser->tmp_string);
+        if (is_kword(parser, 6)) {  //int
+            string_add_char(&parser->tmp_string, 'i');
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 't');
+        } else if (is_kword(parser, 8)) {   //double
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 'u');
+            string_add_char(&parser->tmp_string, 'm');
+        } else if (is_kword(parser, 7)) {   //string
+            string_add_char(&parser->tmp_string, 's');
+            string_add_char(&parser->tmp_string, 't');
+            string_add_char(&parser->tmp_string, 'r');
+        }
+        stack_push(&parser->tmp_stack, parser->tmp_string);
+        parser->num_types++;
         parser->exit_code = type_2(parser);
     } else {
         return PARSER_ERR;

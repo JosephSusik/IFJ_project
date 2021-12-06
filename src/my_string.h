@@ -31,6 +31,7 @@ int string_cmp(String *s, const char *keyword_string);
 int string_string_cmp(String *s, String *s2);
 void string_print(String *s);
 int string_copy(String *s1, String *s2);
+int string_strtok(String *s1, const char *d, String *s2);
 
 
 

@@ -90,3 +90,8 @@ int string_copy(String *s1, String *s2) {
     s1->length = new_length;
     return OK;
 }
+
+int string_strtok(String *s1, const char * d, String *s2) {
+    
+    return 0;
+}

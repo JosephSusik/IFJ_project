@@ -48,6 +48,7 @@ void tree_insert(nodeptr *root, String *k, node_type type, function_data *data) 
         tmp->lptr = NULL;
         tmp->rptr = NULL;
         *root = tmp;
+        //string_print(&tmp->func_data->stack_params.top->data);
 
     } else {
         if (string_string_cmp(k, (*root)->key) < 0) { //go left
@@ -55,7 +56,8 @@ void tree_insert(nodeptr *root, String *k, node_type type, function_data *data) 
         } else if (string_string_cmp(k, (*root)->key) > 0) { //go right
             tree_insert(&(*root)->rptr, k, type, data);
         } else {
-            (*root)->func_data = data;    
+            (*root)->func_data = data;
+                
         }
     }
 }
@@ -126,7 +128,7 @@ nodeptr symtable_search(symtable *sroot, String *k) {
     return tree_search(sroot->root, k);
 }
 
-void symtable_insert(symtable *sroot, String *k, node_type type, bool decl, bool def, int params, int returns) {
+void symtable_insert(symtable *sroot, String *k, node_type type, bool decl, bool def, int params, int returns, stack param_s, stack ret_s) {
     if (type == func) { // its function
         // TO-DO: pass arrays of num params,  ret params, num params, num return, defined, declared
         
@@ -145,13 +147,27 @@ void symtable_insert(symtable *sroot, String *k, node_type type, bool decl, bool
         tmp_data->num_return = returns;
         //tmp_data->pole_params = NULL; //?
         //tmp_data->pole_returns = NULL; //?
+        /*
         if (tmp_data->stack_params.top == NULL) {
             stack_init(&tmp_data->stack_params);
         }
-        if (tmp_data->stack_returns.top == NULL) {
-            stack_init(&tmp_data->stack_returns);
+        */
+        if (param_s.top != NULL) {
+            stack_init(&tmp_data->stack_params);
+            while(param_s.top != NULL) {
+                stack_push(&tmp_data->stack_params, param_s.top->data);
+                stack_pop(&param_s);
+            }
         }
 
+        if (ret_s.top != NULL) {
+            stack_init(&tmp_data->stack_returns);
+            while(ret_s.top != NULL) {
+                stack_push(&tmp_data->stack_returns, ret_s.top->data);
+                stack_pop(&ret_s);
+            }
+        }
+        
         tree_insert(&(sroot->root), k, type, tmp_data);
         
         
