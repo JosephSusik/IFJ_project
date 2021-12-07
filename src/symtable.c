@@ -38,6 +38,7 @@ nodeptr tree_search(nodeptr root, String *k) {
 void tree_insert(nodeptr *root, String *k, node_type type, function_data *data) {
     if (*root == NULL) {
         nodeptr tmp = malloc(sizeof(struct node));
+
         if (tmp == NULL) { //malloc fail
             return;
         }
@@ -145,13 +146,7 @@ void symtable_insert(symtable *sroot, String *k, node_type type, bool decl, bool
         tmp_data->defined = def;
         tmp_data->num_params = params;
         tmp_data->num_return = returns;
-        //tmp_data->pole_params = NULL; //?
-        //tmp_data->pole_returns = NULL; //?
-        /*
-        if (tmp_data->stack_params.top == NULL) {
-            stack_init(&tmp_data->stack_params);
-        }
-        */
+       
         stackptr * param_s_pointer = param_s.top;
         if (param_s.top != NULL) {
             //stack_dispose(&tmp_data->stack_params);
@@ -176,6 +171,8 @@ void symtable_insert(symtable *sroot, String *k, node_type type, bool decl, bool
         
     } else if (type == var) {   // its variable
         tree_insert(&(sroot->root), k, type, NULL);
+
+        
     } else {
         return; //should return err, bc cant have anythign else than var or func
     }

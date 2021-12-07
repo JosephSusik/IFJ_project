@@ -16,6 +16,6 @@
 #include <stdio.h>
 
 void print_header();
-
+void print_main();
 
 #endif //CODE_GENERATOR_H

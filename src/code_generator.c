@@ -14,4 +14,9 @@
 
 void print_header() {
     printf(".IFJcode21\n");
+    printf("JUMP $$main\n");
+}
+
+void print_main() {
+    printf("LABEL $$main\n");
 }
