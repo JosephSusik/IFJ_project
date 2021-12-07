@@ -266,12 +266,18 @@ int prog(Parser parser) {
         //Check it function is defined
         string_copy(&parser->func_id,parser->token.tvalue.string);
         nodeptr a = symtable_search(&parser->global_symtable, &parser->func_id);
+
         
+        //string_print(&a->func_data->stack_params.top->next->next->data);
+        //printf("Params %d\n", a->func_data->num_params);
+        //printf(" <<==\n");
+
         if(a != NULL) {
             if (a->func_data->defined == true) {
                 return UNDEFINED_VAR_ERR;
             }
         }
+        
 
 
         stack nul;
@@ -306,25 +312,41 @@ int prog(Parser parser) {
                     }
                     
                     stackptr *point_2 = parser->tmp_stack_3.top;
-                    stackptr *point = a->func_data->stack_params.top;            
+                    stackptr *point = a->func_data->stack_params.top;     
 
                     for(int i = 0; i < parser->num_params; i++) {
                         string_print(&point->data);
                         printf("    ");
                         string_print(&point_2->data);
                         printf("\n");
-                        //string_strtok(&point_2->data, ":", &parser->tmp_string);
-                        point = point->next;
-                        point_2 = point_2->next;
+                        string_strtok(&point_2->data, ":", &parser->tmp_string);
                         //compare stacks from a->data->top.data a parser->tmp_stack->data
                         //a->func_data->stack_params.top->data == parser->tmp_stack.top->data; //name:type
                         //if same, somehow reassign values to symtable_insert bellow
                         //string_strtok(&parser->tmp_stack.top->data, ":", &parser->tmp_string);
                         //string_print(&parser->tmp_string);
-                    
-                    }
-                    
+
+                        /* printf second argument without columms */
+                        //string_print(&parser->tmp_string);
+
+                        if(string_string_cmp(&point->data, &parser->tmp_string) != 0){
+                            
+                            // TADY PEPO RETURN END NEVIM
+                            printf("Velky spatny\n");
+                            //This is the end
+                        }
+                        string_clear(&parser->tmp_string);
+                        point = point->next;
+                        point_2 = point_2->next;
+
+                    }                    
                 }
+                
+                
+                
+                // Tady by mela byt funkce pro kontrolovani return values
+                // ale hodnoty a->func_data->num_return a parser->num_return maji rozdilne hodnoty
+                // parser->num_return ukazuje o jednu hodnotu vice
             }
         }
 
@@ -382,11 +404,24 @@ int prog(Parser parser) {
         if (parser->exit_code != 0) {
             return parser->exit_code;
         }
-        
+        /*
+        string_print(&parser->tmp_stack_3.top->data);
+        string_print(&parser->tmp_stack_3.top->next->data);
+        string_print(&parser->tmp_stack_3.top->next->next->data);
+        string_print(&parser->tmp_stack_3.top->next->next->next->data);*/
+
+
         symtable_insert(&parser->global_symtable, &parser->func_id, func, true, false, parser->num_types, parser->num_return, parser->tmp_stack_3, parser->tmp_stack_2);
+        //nodeptr b = symtable_search(&parser->global_symtable, &parser->func_id);
+        //string_print(&b->func_data->stack_params.top->next->next->next->data);
     
         stack_dispose(&(parser->tmp_stack_3));
+        stack_dispose(&(parser->tmp_stack_2));
 
+        //string_print(&parser->tmp_stack_3.top->data);
+
+
+        free(a);
 
         parser->exit_code = prog(parser); //process <prog>
         if (parser->exit_code != 0) {

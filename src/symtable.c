@@ -152,20 +152,22 @@ void symtable_insert(symtable *sroot, String *k, node_type type, bool decl, bool
             stack_init(&tmp_data->stack_params);
         }
         */
+        stackptr * param_s_pointer = param_s.top;
         if (param_s.top != NULL) {
             //stack_dispose(&tmp_data->stack_params);
             stack_init(&tmp_data->stack_params);
-            while(param_s.top != NULL) {
-                stack_push(&tmp_data->stack_params, param_s.top->data);
-                stack_pop(&param_s);
+            while(param_s_pointer != NULL) {
+                stack_push(&tmp_data->stack_params, param_s_pointer->data);
+                param_s_pointer = param_s_pointer->next;
             }
         }
 
+        stackptr * ret_s_pointer = ret_s.top;
         if (ret_s.top != NULL) {
             stack_init(&tmp_data->stack_returns);
-            while(ret_s.top != NULL) {
-                stack_push(&tmp_data->stack_returns, ret_s.top->data);
-                stack_pop(&ret_s);
+            while(ret_s_pointer != NULL) {
+                stack_push(&tmp_data->stack_returns, ret_s_pointer->data);
+                ret_s_pointer = ret_s_pointer->next;
             }
         }
         
