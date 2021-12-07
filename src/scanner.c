@@ -1,115 +1,131 @@
 /***************************************
 * Project - Compiler for IFJ21
-* 
-* @brief Scanner for IFJ21
-* 
+*
+* @brief Scan input file and generate tokens
+*
 * @author Josef Susík <xsusik00>
 * @author Marek Putala <xputal00>
-* @author
-* @author
-* 
-* @file scanner.c 
+* @author Samuel Popelář <xpopel22>
+*
+* @file scanner.c
 **************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "scanner.h"
 #include "error.h"
+#include "scanner.h"
 
-void inc_position(int *position){
-    *position = *position + 1;
+// promenna pro ulozeni vstupniho souboru
+FILE *source_file;
+String *source_string;
+
+void setSourceFile(FILE *f) {
+    source_file = f;
 }
 
-static int integer_number(String *str, Token *New_token){
+void setString(String *string) {
+    source_string = string;
+}
+
+static int free_memory(int exit_code, String *string) {
+    string_free(string);
+    return exit_code;
+}
+
+static int integer_number(String *string, Token *token) {
     char *ptr;
-    int integer = (int)strtol(str->str, &ptr, 10);
-    New_token->tvalue.whole_num = integer;
-    New_token->ttype = TOKEN_TYPE_INT;
-    New_token->tuniontype = 1;
-    return OK;
+    int integer = (int) strtol(string->str, &ptr, 10);
+    if (*ptr) {
+        return free_memory(INTERNAL_ERR, string);
+    }
+    token->tvalue.whole_num = integer;
+    token->ttype = TOKEN_TYPE_INT;
+    token->tuniontype = 1;
+    return free_memory(OK, string);
 }
 
-static int double_number(String *str, Token *New_token){
+static int double_number(String *string, Token *token) {
     char *ptr;
-    double double_number = strtod(str->str, &ptr);
-    New_token->tvalue.dec_num = double_number;
-    New_token->ttype = TOKEN_TYPE_DOUBLE;
-    return OK;
+    double double_number = strtod(string->str, &ptr);
+    if (*ptr) {
+        return free_memory(INTERNAL_ERR, string);
+    }
+    token->tvalue.dec_num = double_number;
+    token->ttype = TOKEN_TYPE_DOUBLE;
+    token->tuniontype = 2;
+    return free_memory(OK, string);
 }
 
-int is_string_keyword(String *s, Token *token){
-    if(!string_cmp(s, "do")){
+int is_string_keyword(String *string, Token *token) {
+    if(string_cmp(string, "do") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_DO;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "else")){
+    else if(string_cmp(string, "else") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_ELSE;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "end")){
+    else if(string_cmp(string, "end") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_END;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "function")){
+    else if(string_cmp(string, "function") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_FUNCTION;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "global")){
+    else if(string_cmp(string, "global") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_GLOBAL;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "if")){
+    else if(string_cmp(string, "if") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_IF;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "integer")){
+    else if(string_cmp(string, "integer") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_INTEGER;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "local")){
+    else if(string_cmp(string, "local") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_LOCAL;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "nil")){
+    else if(string_cmp(string, "nil") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_NIL;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "number")){
+    else if(string_cmp(string, "number") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_NUMBER;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "require")){
+    else if(string_cmp(string, "require") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_REQUIRE;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "return")){
+    else if(string_cmp(string, "return") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_RETURN;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "string")){
+    else if(string_cmp(string, "string") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_STRING;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "then")){
+    else if(string_cmp(string, "then") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_THEN;
         token->tuniontype = 4;
     }
-    else if(!string_cmp(s, "while")){
+    else if(string_cmp(string, "while") == 0){
         token->ttype = TOKEN_TYPE_KEYWORD;
         token->tvalue.kword = KEYWORD_WHILE;
         token->tuniontype = 4;
@@ -117,443 +133,430 @@ int is_string_keyword(String *s, Token *token){
     else{
         token->ttype = TOKEN_TYPE_IDENTIFIER;
         token->tuniontype = 3;
+        if(string_copy(token->tvalue.string, string) == 1){
+            return free_memory(INTERNAL_ERR, string);
+        }
     }
     return OK;
 }
 
-int scan_token(Token *New_token, char *p_text, int *p_text_position, String *str){
+int getNextToken(Token *token) {
+    //Problem with source file
+    if (source_file == NULL) {
+        return INTERNAL_ERR;
+    }
     Token_type State = TOKEN_TYPE_START;
 
-    //printf("%i %c\n", *p_text_position, p_text[*p_text_position]);
-    //inc_position(p_text_position);
+    token->ttype = TOKEN_TYPE_EMPTY;
+    token->tuniontype = 0;
+    token->tvalue.string = source_string;
 
-    New_token->ttype = TOKEN_TYPE_EMPTY;
-    New_token->tuniontype = 0;
+    String tmp_string;
+    String *string_2 = &tmp_string;
+    
+    if (string_init(string_2) != 0) {
+        return INTERNAL_ERR;
+    }
 
     char c;
     char escape_one;
     char escape_two;
     char escape_three;
     int escape_number;
-    int returnValue;
 
-    while(1){
-        c = p_text[*p_text_position];
-        printf("Scan %c - %i\n", p_text[*p_text_position], p_text[*p_text_position]);
-        switch(State){
-            /*          ========== START OF START SWITCH ==========        */
+    while(1) {
+        c = (char)getc(source_file);
+        switch(State) {
             case TOKEN_TYPE_START:
-                if((c == ' ') || (c == '\t')){  // space or tab
-                    State = TOKEN_TYPE_START;
-                }
-                else if(c == '\n'){     // new line
-                    New_token->ttype = TOKEN_TYPE_EOL;
-                    inc_position(p_text_position);
-                    return OK;
-                }
-                else if(c == EOF){      // end of file
-                    New_token->ttype = TOKEN_TYPE_EOF;
-                    inc_position(p_text_position);
-                    return OK;
-                }
-                else if(c == '<'){      // <
+                if (c == '\n') {                        // newline
+                    State = TOKEN_TYPE_EOL;
+                } else if (isspace(c) || (c == '\t')) { //space or tab
+                    token->ttype = TOKEN_TYPE_EMPTY; 
+                    //printf("space\n");
+                    return free_memory(OK, string_2);
+                    //State = TOKEN_TYPE_START;
+                } else if (c == EOF) {                  //end of file
+                    token->ttype = TOKEN_TYPE_EOF; 
+                    return free_memory(OK, string_2);   
+                } else if (c == '<') {                  // <
                     State = TOKEN_TYPE_LESS;
-                }
-                else if(c == '>'){      // >
+                } else if (c == '>') {                  // > 
                     State = TOKEN_TYPE_MORE;
-                }
-                else if(c == '+'){      // +
-                    New_token->ttype = TOKEN_TYPE_PLUS;
-                    inc_position(p_text_position);
-                    return OK;
-                }
-                else if(c == '-'){      // -
-                    New_token->ttype = TOKEN_TYPE_MINUS;
-                    inc_position(p_text_position);
-                    return OK;
-                }
-                else if(c == '*'){      // *
-                    New_token->ttype = TOKEN_TYPE_MULTIPLY;
-                    inc_position(p_text_position);
-                    return OK;
-                }
-                else if(c == '/'){      // /
+                } else if (c == '=') {                  // =
+                    State = TOKEN_TYPE_ASSIGN;//TOKEN_TYPE_EQUALS;
+                } else if (c == '+') {                  // +
+                    token->ttype = TOKEN_TYPE_PLUS;
+                    return free_memory(OK, string_2);
+                } else if (c == '-') {                  // -
+                    State = TOKEN_TYPE_MINUS;
+                } else if (c == '*') {                  // *
+                    token->ttype = TOKEN_TYPE_MULTIPLY;
+                    return free_memory(OK, string_2);
+                } else if (c == '/') {                  // /
                     State = TOKEN_TYPE_DIVISION;
-                }
-                else if(c == '"'){      // "
+                } else if (c == '"') {                  // "
                     State = TOKEN_TYPE_STRING_START;
-                }
-                else if(c == '#'){      // #
-                    New_token->ttype = TOKEN_TYPE_LENGTH;
-                    inc_position(p_text_position);
-                    return OK;
-                }
-                else if(c == '='){      // =
-                    State = TOKEN_TYPE_EQUALS;
-                }
-                else if(c == '~'){      // ~
+                } else if (c == ':') {                  // :
+                    token->ttype = TOKEN_TYPE_COLONS;
+                    return free_memory(OK, string_2);
+                } else if (c == '#') {                  // #
+                    token->ttype = TOKEN_TYPE_LENGTH;
+                    return free_memory(OK, string_2);
+                } else if (c == '~') {                  // ~
                     State = TOKEN_TYPE_EG_ASSIGN;
-                }
-                else if(c == ':'){      // :
-                    New_token->ttype = TOKEN_TYPE_COLONS;
-                    inc_position(p_text_position);
-                    return OK;
-                }
-                else if(c == ','){      // ,
-                    New_token->ttype = TOKEN_TYPE_COMMA;
-                    inc_position(p_text_position);
-                    return OK;
-                }
-                else if((c == '_')){      // _
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                } else if (c == ',') {                  // ,
+                    token->ttype = TOKEN_TYPE_COMMA;
+                    return free_memory(OK, string_2);
+                } else if (c == '_') {                  // _
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
                     State = TOKEN_TYPE_IDENTIFIER;
-                }
-                else if(c == '('){      // (
-                    New_token->ttype = TOKEN_TYPE_LEFT_PAR;
-                    inc_position(p_text_position);
-                    State = TOKEN_TYPE_LEFT_PAR;
-                    return OK;
-                }
-                else if(c == ')'){      // )
-                    New_token->ttype = TOKEN_TYPE_RIGHT_PAR;
-                    inc_position(p_text_position);
-                    State = TOKEN_TYPE_RIGHT_PAR;
-                    return OK;
-                }
-                else if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')){      // is letter a-z or A-Z
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        inc_position(p_text_position);
-                        return INTERNAL_ERR;
+                } else if (c == '(') {                  // (
+                    token->ttype = TOKEN_TYPE_LEFT_PAR;
+                    return free_memory(OK, string_2);
+                } else if (c == ')') {                  // )
+                    token->ttype = TOKEN_TYPE_RIGHT_PAR;
+                    return free_memory(OK, string_2);
+                } else if (isalpha(c)) {                // a-z
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
-                    State = TOKEN_TYPE_LETTER;
-                }
-                else if(c >= '0' && c <= '9'){      // is digit 0-9
+                    State = TOKEN_TYPE_IDENTIFIER;
+                } else if (isdigit(c)) {                // 0-9
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
+                    }
                     State = TOKEN_TYPE_DIGIT;
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
-                    }
-                }
-                else{   // error 1
-                    return SCANNER_ERR;
-                }
-                inc_position(p_text_position);
-                break;
-            /*      ========== END OF START SWITCH ==========     */
-
-            /*      ========== START OF LESS AND MORE ==========      */
-            case TOKEN_TYPE_LESS: // <
-                if(c == '='){   // <=
-                    New_token->ttype = TOKEN_TYPE_LESS_EQ;
-                    inc_position(p_text_position);
-                    return OK;
-                }
-                else{   // <
-                    New_token->ttype = TOKEN_TYPE_LESS;
-                    return OK;
+                } else {
+                    return free_memory(SCANNER_ERR, string_2);
                 }
                 break;
-            case TOKEN_TYPE_MORE: // >
-                if(c == '='){   // >=
-                    New_token->ttype = TOKEN_TYPE_MORE_EQ;
-                    inc_position(p_text_position);
-                    return OK;
+            /******** END OF TOKE_TYPE_START ********/
+            case TOKEN_TYPE_LESS:
+                if (c == '=') {
+                    token->ttype = TOKEN_TYPE_LESS_EQ;
+                } else {
+                    ungetc(c, source_file);
+                    token->ttype = TOKEN_TYPE_LESS;
                 }
-                else{   // >
-                    New_token->ttype = TOKEN_TYPE_MORE;
-                    return OK;
+                return free_memory(OK, string_2);
+            
+            case TOKEN_TYPE_MORE:
+                if (c == '=') {
+                    token->ttype = TOKEN_TYPE_MORE_EQ;
+                } else {
+                    ungetc(c, source_file);
+                    token->ttype = TOKEN_TYPE_MORE;
                 }
-                break;
-            /*      ========== END OF LESS AND MORE ==========      */
+                return free_memory(OK, string_2);
+            
+            case TOKEN_TYPE_ASSIGN://TOKEN_TYPE_EQUALS:
+                if (c == '=') {
+                    token->ttype = TOKEN_TYPE_EQUALS;
+                } else {
+                    ungetc(c, source_file);
+                    token->ttype = TOKEN_TYPE_ASSIGN;
+                }
+                return free_memory(OK, string_2);
 
-            /*      ========== START OF EQUALS ==========      */
-            case TOKEN_TYPE_EG_ASSIGN: // ~
-                if(c == '='){   // ~=
-                    New_token->ttype = TOKEN_TYPE_EG_ASSIGN;
-                    inc_position(p_text_position);
-                    return OK;
+            case TOKEN_TYPE_EG_ASSIGN:
+                if (c == '=') {
+                    token->ttype = TOKEN_TYPE_EG_ASSIGN;
+                    return free_memory(OK, string_2);
+                } else {
+                    return free_memory(SCANNER_ERR, string_2);
                 }
-                else{   
-                    return SCANNER_ERR;
+            
+            case TOKEN_TYPE_DIVISION:
+                if (c == '/') {
+                    token->ttype = TOKEN_TYPE_DIVISION_INT;
+                } else {
+                    ungetc(c, source_file);
                 }
-                break;
-
-            case TOKEN_TYPE_EQUALS: // =
-                if(c == '='){   // ==
-                    New_token->ttype = TOKEN_TYPE_EQUALS;
-                    inc_position(p_text_position);
-                    return OK;
-                }
-                else{
-                    return SCANNER_ERR;
-                }
-                break;
-            /*      ========== END OF EQUALS ==========      */
-
-            /*      ========== START OF ARYTMETIC OPERATIONS ==========      */
-            case TOKEN_TYPE_DIVISION: // /
-                if(c == '/'){
-                    New_token->ttype = TOKEN_TYPE_DIVISION_INT;
-                    inc_position(p_text_position);
-                    return OK;
-                }
-                else{
-                    New_token->ttype = TOKEN_TYPE_DIVISION;
-                    return OK;
-                }
-                break;
-
-            /*      ========== END OF ARYTMETIC OPERATIONS ==========      */
-
-            /*      ========== START OF STRING ==========      */
+                return free_memory(OK, string_2);
+            
             case TOKEN_TYPE_STRING_START:
-                if(c < 32){
-                    return SCANNER_ERR;
-                }
-                else if(c == '"'){
-                    
-                    New_token->ttype = TOKEN_TYPE_STRING;
-                    New_token->tuniontype = 3;
-
-                    inc_position(p_text_position);
-                    
-                    return OK;
-                }
-                else if(c == '\\'){
-                    inc_position(p_text_position);
+                if (c < 32) {
+                    return free_memory(SCANNER_ERR, string_2);
+                } 
+                if (c == '"') {
+                    c = (char)getc(source_file);
+                    if (isspace(c) || c == ')') {
+                        ungetc(c, source_file);
+                        token->ttype = TOKEN_TYPE_STRING;
+                        token->tuniontype = 5;
+                        if(string_copy(token->tvalue.string, string_2) == 1){
+                            return free_memory(INTERNAL_ERR, string_2);
+                        }
+                        return free_memory(OK, string_2);
+                    } else {
+                        return free_memory(SCANNER_ERR, string_2);
+                    }
+                } else if (c == '\\') {
                     State = TOKEN_TYPE_STRING_ESCAPE;
-                }
-                else{
-                    returnValue = string_add_char(str, c);
-                    inc_position(p_text_position);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                } else {
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
                 }
                 break;
+
             case TOKEN_TYPE_STRING_ESCAPE:
-                if(c < 32){
-                    return SCANNER_ERR;
+                if (c < 32) {
+                    return free_memory(SCANNER_ERR, string_2);
                 }
-                else if(c == 'n'){
-                    returnValue = string_add_char(str, '\\n');
-                    inc_position(p_text_position);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                if (c == 'n') {
+                    if (string_add_char(string_2, '\n') != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
                     State = TOKEN_TYPE_STRING_START;
-                }
-                else if(c == '\\'){
-                    returnValue = string_add_char(str, '\\');
-                    inc_position(p_text_position);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                } else if (c == '\\') {
+                    if (string_add_char(string_2, '\\') != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
                     State = TOKEN_TYPE_STRING_START;
-                }
-                else if(c == 't'){
-                    returnValue = string_add_char(str, '\t');
-                    inc_position(p_text_position);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                } else if (c == 't') {
+                    if (string_add_char(string_2, '\t') != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
                     State = TOKEN_TYPE_STRING_START;
-                }
-                else if(c >= '0' && c <= '9'){
+                } else if (isdigit(c)) {
                     escape_one = c;
-                    inc_position(p_text_position);
                     State = TOKEN_TYPE_STRING_ESCAPE_TWO;
-                }
-                else{
-                    return SCANNER_ERR;
+                } else {
+                    return free_memory(SCANNER_ERR, string_2);
                 }
                 break;
+
             case TOKEN_TYPE_STRING_ESCAPE_TWO:
-                if(c >= '0' && c <= '9'){
+                if (isdigit(c)) {
                     escape_two = c;
-                    inc_position(p_text_position);
                     State = TOKEN_TYPE_STRING_ESCAPE_THREE;
-                }
-                else{
-                    return SCANNER_ERR;
+                } else {
+                    return free_memory(SCANNER_ERR,  string_2);
                 }
                 break;
+
             case TOKEN_TYPE_STRING_ESCAPE_THREE:
-                if(c >= '0' && c <= '9'){
+                if (isdigit(c)) {
                     escape_three = c;
-                    inc_position(p_text_position);
                     State = TOKEN_TYPE_STRING_ESCAPE_WRITE;
-                }
-                else{
-                    return SCANNER_ERR;
+                } else {
+                    return free_memory(SCANNER_ERR, string_2);
                 }
                 break;
+
             case TOKEN_TYPE_STRING_ESCAPE_WRITE:
-                escape_number = (escape_one - 48) * 100  + (escape_two - 48) * 10 + (escape_three - 48);
-                returnValue = string_add_char(str, (char)escape_number);
-                if(returnValue == INTERNAL_ERR){
-                    return INTERNAL_ERR;
+                escape_number = (escape_one - 48) * 100 + (escape_two - 48) * 100 + (escape_three - 48) * 100;
+                if (string_add_char(string_2, (char)escape_number) != 0) {
+                    return free_memory(INTERNAL_ERR, string_2);
                 }
                 State = TOKEN_TYPE_STRING_START;
                 break;
-            /*      ========== END OF STRING ==========      */
 
-            /*      ========== START OF NUMBER ==========      */
             case TOKEN_TYPE_DIGIT:
-                if(c >= '0' && c <= '9'){
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                if (isdigit(c)) {
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
-                    inc_position(p_text_position);
-                    State = TOKEN_TYPE_DIGIT;
-                }
-                else if(c == '.'){
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                    State = TOKEN_TYPE_DIGIT;                    
+                } else if (c == '.') {
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
-                    inc_position(p_text_position);
                     State = TOKEN_TYPE_DOUBLE_DOT;
-                }
-                else if(c == 'e' || c == 'E'){
-                    returnValue = string_add_char(str, 'e');
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                } else if (c == 'e'|| c == 'E') {
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
-                    inc_position(p_text_position);
                     State = TOKEN_TYPE_EXPONENT;
-                }
-                else{
-                    return integer_number(str, New_token);
+                } else if (isalpha(c)) {
+                    return free_memory(SCANNER_ERR, string_2);
+                } else {
+                    ungetc(c, source_file);
+                    return integer_number(string_2, token);
                 }
                 break;
+
             case TOKEN_TYPE_DOUBLE_DOT:
-                if(c >= '0' && c <= '9'){
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                if (isdigit(c)) {
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
-                    inc_position(p_text_position);
                     State = TOKEN_TYPE_DOUBLE;
-                }
-                else{
-                    return SCANNER_ERR;
+                } else {
+                    return free_memory(SCANNER_ERR, string_2);
                 }
                 break;
+            
             case TOKEN_TYPE_DOUBLE:
-                if(c >= '0' && c <= '9'){
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                if (isdigit(c)) {
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
-                    inc_position(p_text_position);
                     State = TOKEN_TYPE_DOUBLE;
-                }
-                else if(c == 'e' || c == 'E'){
-                    returnValue = string_add_char(str, 'e');
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                } else if (c == 'e' || c == 'E') {
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
-                    inc_position(p_text_position);
                     State = TOKEN_TYPE_EXPONENT;
-                }
-                else{
-                    return double_number(str, New_token);
+                } else {
+                    ungetc(c, source_file);
+                    return double_number(string_2, token);
                 }
                 break;
+            
             case TOKEN_TYPE_EXPONENT:
-                if(c >= '0' && c <= '9'){
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                if(isdigit(c)) {
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
-                    inc_position(p_text_position);
                     State = TOKEN_TYPE_EXPONENT_EXPONENT;
-                }
-                else if(c == '+' || c == '-'){
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                } else if (c == '+' || c == '-') {
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
-                    inc_position(p_text_position);
                     State = TOKEN_TYPE_EXPONENT_SIGN;
                 }
                 break;
+            
             case TOKEN_TYPE_EXPONENT_SIGN:
-                if(c >= '0' && c <= '9'){
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                if(isdigit(c)) {
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
-                    inc_position(p_text_position);
                     State = TOKEN_TYPE_EXPONENT_EXPONENT;
-                }
-                else{
-                    return SCANNER_ERR;
+                } else {
+                    return free_memory(SCANNER_ERR, string_2);
                 }
                 break;
-            case TOKEN_TYPE_EXPONENT_EXPONENT:
-                if(c >= '0' && c <= '9'){
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
-                    }
-                    inc_position(p_text_position);
-                    State = TOKEN_TYPE_EXPONENT_EXPONENT;
-                }
-                else{
-                    return double_number(str, New_token);
-                }
-                break;
-            /*      ========== END OF NUMBER ==========      */
 
-            /*      ========== START OF IDENTIFICATOR/KEYWORD ==========      */
+            case TOKEN_TYPE_EXPONENT_EXPONENT:
+                if(isdigit(c)) {
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
+                    }
+                    State = TOKEN_TYPE_EXPONENT_EXPONENT;
+                } else {
+                    ungetc(c, source_file);
+                    return double_number(string_2, token);
+                }
+                break;
+
             case TOKEN_TYPE_IDENTIFIER:
-                if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_'){
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
+                if (isalpha(c)  || isdigit(c) || c == '_') {
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
                     }
-                    inc_position(p_text_position);
                     State = TOKEN_TYPE_IDENTIFIER;
-                }
-                else{
-                    New_token->ttype = TOKEN_TYPE_IDENTIFIER;
-                    return OK;
+                } else {
+                    if (isspace(c)) {
+                        ungetc(c, source_file); 
+                        if(is_string_keyword(string_2, token) != 0) {
+                            return free_memory(INTERNAL_ERR, string_2);
+                        }
+                        return free_memory(OK, string_2); 
+                    } else if (c == '(') {
+                        ungetc(c, source_file);
+                        if(is_string_keyword(string_2, token) != 0) {
+                            return free_memory(INTERNAL_ERR, string_2);
+                        }
+                        return free_memory(OK, string_2);
+                    } else if (c == ')') {
+                        ungetc(c, source_file);
+                        if(is_string_keyword(string_2, token) != 0) {
+                            return free_memory(INTERNAL_ERR, string_2);
+                        }
+                        return free_memory(OK, string_2);
+                    } else if (c == ':') {
+                        ungetc(c, source_file);
+                        if(is_string_keyword(string_2, token) != 0) {
+                            return free_memory(INTERNAL_ERR, string_2);
+                        }
+                        return free_memory(OK, string_2);
+                    } else if (c == ',') {
+                        ungetc(c, source_file);
+                        if(is_string_keyword(string_2, token) != 0) {
+                            return free_memory(INTERNAL_ERR, string_2);
+                        }
+                        return free_memory(OK, string_2);
+                    } else if (c == EOF) {
+                        ungetc(c, source_file); 
+                        if(is_string_keyword(string_2, token) != 0) {
+                            return free_memory(INTERNAL_ERR, string_2);
+                        }
+                        return free_memory(OK, string_2);
+                    } else {
+                        return free_memory(SCANNER_ERR, string_2);
+                    }
                 }
                 break;
-            case TOKEN_TYPE_LETTER:
-                if((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')){
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
-                    }
-                    inc_position(p_text_position);
-                    State = TOKEN_TYPE_LETTER;
-                }
-                else if(c == '_'){
-                    returnValue = string_add_char(str, c);
-                    if(returnValue == INTERNAL_ERR){
-                        return INTERNAL_ERR;
-                    }
-                    inc_position(p_text_position);
-                    State = TOKEN_TYPE_IDENTIFIER;
-                }
-                else{
-                    return is_string_keyword(str, New_token);
-                }
-                break;
-            case TOKEN_TYPE_EOF:
-            case TOKEN_TYPE_EOL:
-            case TOKEN_TYPE_EMPTY:
-            case TOKEN_TYPE_KEYWORD:
-            case TOKEN_TYPE_PLUS:
+            
             case TOKEN_TYPE_MINUS:
+                if (c == '-') {
+                    State = TOKEN_TYPE_LINE_COMMENTARY;
+                } else {
+                    ungetc(c, source_file); 
+                    token->ttype = TOKEN_TYPE_MINUS;
+                    return free_memory(OK, string_2);
+                }
+                break;
+            
+            case TOKEN_TYPE_LINE_COMMENTARY:
+                if (c == '\n') { 
+                    State = TOKEN_TYPE_START;
+                    ungetc(c, source_file);
+                    break;
+                } else if (c == '['){
+                    State = TOKEN_TYPE_BLOCK_COMMENTARY_START;
+                    break;
+                } else if (c == EOF) {
+                    token->ttype = TOKEN_TYPE_EOF; 
+                    return free_memory(OK, string_2);
+                    break;
+                }
+                State = TOKEN_TYPE_LINE_COMMENTARY;
+                break;
+
+            case TOKEN_TYPE_BLOCK_COMMENTARY_START:
+                if (c == '[') {
+                    State = TOKEN_TYPE_BLOCK_COMMENTARY_END;
+                } else {
+                    State = TOKEN_TYPE_LINE_COMMENTARY;
+                }
+                break;
+            
+            case TOKEN_TYPE_BLOCK_COMMENTARY_END:
+                if (c == ']') {  
+                    State = TOKEN_TYPE_BLOCK_COMMENTARY_END_2;
+                } else {
+                    State = TOKEN_TYPE_BLOCK_COMMENTARY_END;
+                }
+                break;
+
+            case TOKEN_TYPE_BLOCK_COMMENTARY_END_2:
+                if (c == ']') {
+                    State = TOKEN_TYPE_START;
+                    break;
+                } else {
+                    State = TOKEN_TYPE_BLOCK_COMMENTARY_END;
+                }
+                break;
+
+            case TOKEN_TYPE_EOL:
+                if (isspace(c)) {
+                    break;
+                }
+                ungetc(c, source_file);
+                token->ttype = TOKEN_TYPE_EOL;
+                return free_memory(OK, string_2);
+            
+            case TOKEN_TYPE_EOF: //
+            case TOKEN_TYPE_EMPTY: // 
+            case TOKEN_TYPE_KEYWORD:
+            case TOKEN_TYPE_LETTER:
+            case TOKEN_TYPE_PLUS:
             case TOKEN_TYPE_MULTIPLY:
             case TOKEN_TYPE_LENGTH:
             case TOKEN_TYPE_COMMA:
@@ -562,17 +565,12 @@ int scan_token(Token *New_token, char *p_text, int *p_text_position, String *str
             case TOKEN_TYPE_RIGHT_PAR:
             case TOKEN_TYPE_DIVISION_INT:
             case TOKEN_TYPE_COLONS:
-            case TOKEN_TYPE_LESS_EQ:
-            case TOKEN_TYPE_MORE_EQ:
-            case TOKEN_TYPE_LINE_COMMENTARY:
-            case TOKEN_TYPE_BLOCK_COMMENTARY_START:
-            case TOKEN_TYPE_BLOCK_COMMENTARY_END:
+            case TOKEN_TYPE_LESS_EQ: //
+            case TOKEN_TYPE_MORE_EQ: // 
             case TOKEN_TYPE_STRING:
             case TOKEN_TYPE_STRING_ESCAPE_ONE:
+            case TOKEN_TYPE_EQUALS://TOKEN_TYPE_ASSIGN:
                 break;
-
-            /*      ========== END OF IDENTIFICATOR/KEYWORD ==========      */
-
-        }
-    }
-}
+        } //End of switch(state)
+    } //End of while(1)
+}//End of getNextToken()

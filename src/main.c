@@ -1,32 +1,58 @@
 /***************************************
 * Project - Compiler for IFJ21
-* 
-* @brief Compiler for IFJ21
-* 
+*
+* @brief Main file
+*
 * @author Josef Susík <xsusik00>
 * @author Marek Putala <xputal00>
-* @author 
-* @author
-* 
-* @file main.c 
+* @author Samuel Popelář <xpopel22>
+*
+* @file main.c
 **************************************/
 
 #include <stdio.h>
-#include "error.h"
+#include "scanner.h"
+#include "parser.h"
+#include "symtable.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
+	
+	FILE *f;
+	/*
+	if (argc == 1) {
+		printf("Není zadán vstupní soubor!\n");
+		return 99;
+	}
+	
+	if ((f= fopen(argv[1], "r")) == NULL) {
+		//printf("Soubor se nepodarilo otevrit\n");
+      	//return 99;
+		f = stdin;
+	}
+	*/
 
-    if (argc > 1){
-        printf("Program nemuze but volan s vice jak jednim parametrem.\n");
+	if (argc == 1) {
+		f = stdin;
+	} else if ((f= fopen(argv[1], "r")) == NULL) {
+		printf("Soubor se nepodarilo otevrit\n");
+		printf("Cteni z STDIN\n");
+		f = stdin;
+	}
+
+	setSourceFile(f);
+	String str;
+    if (string_init(&str) == 1)
+    {
         return INTERNAL_ERR;
     }
+    setString(&str);
+	
+	int exit = parse();
+	if (exit != 0) {
+		printf("Something went wrong\n");
+		return exit;
+	}
+	//printf("Hello IFJ\n");
 
-    //if not here, compiler errors, delete later
-    printf("%s\n", argv[0]);
-
-    
-    
-    return 0;
+	return 0;
 }
-
-//End of main.c

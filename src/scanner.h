@@ -1,39 +1,42 @@
 /***************************************
 * Project - Compiler for IFJ21
-* 
-* @brief Scanner for IFJ21
-* 
+*
+* @brief Scan input file and generate tokens 
+*
 * @author Josef Susík <xsusik00>
 * @author Marek Putala <xputal00>
-* @author
-* @author
-* 
+* @author Samuel Popelář <xpopel22>
+*
 * @file scanner.h
 **************************************/
 
+#ifndef SCANNER_H
+#define SCANNER_H
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "my_string.h"
+#include "error.h"
 
-/**
- Reserved keywords go here
-*/
+//Keywords
 typedef enum {
-	KEYWORD_DO,
-	KEYWORD_ELSE,
+    KEYWORD_DOD,
+    KEYWORD_ELSE,
     KEYWORD_END,
     KEYWORD_FUNCTION,
     KEYWORD_GLOBAL,
     KEYWORD_IF,
     KEYWORD_INTEGER,
+    KEYWORD_STRING,
+    KEYWORD_NUMBER,
     KEYWORD_LOCAL,
     KEYWORD_NIL,
-    KEYWORD_NUMBER,
     KEYWORD_REQUIRE,
     KEYWORD_RETURN,
-    KEYWORD_STRING,
     KEYWORD_THEN,
-    KEYWORD_WHILE
+    KEYWORD_WHILE,
+    KEYWORD_DO,
 } Keyword;
 
 typedef enum {
@@ -72,6 +75,7 @@ typedef enum {
     TOKEN_TYPE_LINE_COMMENTARY,  // --
     TOKEN_TYPE_BLOCK_COMMENTARY_START, // --[[
     TOKEN_TYPE_BLOCK_COMMENTARY_END, // ]]
+    TOKEN_TYPE_BLOCK_COMMENTARY_END_2,
 
     TOKEN_TYPE_STRING,
     TOKEN_TYPE_STRING_START,
@@ -85,7 +89,8 @@ typedef enum {
     TOKEN_TYPE_DOUBLE,
     TOKEN_TYPE_EXPONENT,
     TOKEN_TYPE_EXPONENT_SIGN,
-    TOKEN_TYPE_EXPONENT_EXPONENT
+    TOKEN_TYPE_EXPONENT_EXPONENT,
+    TOKEN_TYPE_ASSIGN
 
 } Token_type;
 
@@ -99,7 +104,13 @@ typedef union {
 typedef struct {
     Token_type ttype;
     Token_value tvalue;
-    int tuniontype;
+    int tuniontype; // 0 = basic, 1 = int, 2 = double, 3 = ID, 4 = keyword, 5 = string  
 } Token;
 
-int scan_token(Token *New_token, char *p_text, int *p_text_position, String *str);
+void setSourceFile(FILE *f);
+void setString(String *s);
+
+int getNextToken();
+
+
+#endif //SCANNER_H
