@@ -1,10 +1,10 @@
 require "ifj21"
 
 --deklarace
-global franta : function(integer, string) : number
+global franta : function(integer, string, integer, number) : number
 
 --definice
-function franda(a1:integer, a2:string) : number
+function franta(a1:integer, a2:string, a3:number, a4:number) : number
 
 end
 

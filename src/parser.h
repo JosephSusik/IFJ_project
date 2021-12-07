@@ -39,6 +39,7 @@ typedef struct parser {
     int num_types;
     stack tmp_stack;
     stack tmp_stack_2;
+    stack tmp_stack_3;
     String tmp_string;
 } * Parser;
 

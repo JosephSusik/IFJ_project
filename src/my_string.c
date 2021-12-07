@@ -92,6 +92,17 @@ int string_copy(String *s1, String *s2) {
 }
 
 int string_strtok(String *s1, const char * d, String *s2) {
-    
+    string_copy(s2, s1);
+
+    //string_print(s2);
+
+    char *token;
+   
+    /* get the first token */
+    token = strtok(s2->str, d);
+    //get the second token
+    token = strtok(NULL, d);
+    printf( "%s\n", token );
+
     return 0;
 }

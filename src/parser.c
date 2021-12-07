@@ -167,6 +167,7 @@ Parser init_parser() {
     parser->num_types = 0;
     stack_init(&parser->tmp_stack);
     stack_init(&parser->tmp_stack_2);
+    stack_init(&parser->tmp_stack_3);
     string_init(&parser->tmp_string);
     return parser;
 }
@@ -279,6 +280,8 @@ int prog(Parser parser) {
         //stack_push(&parser->params_stack, parser->token.tvalue.string + type);
         get_token();
         token_ttype(14); // we found ( after ID
+        //stack_dispose(&parser->tmp_stack);
+
         parser->exit_code = params(parser); //process <params>
         if (parser->exit_code != 0) {
             return parser->exit_code;
@@ -294,17 +297,51 @@ int prog(Parser parser) {
         
         if(a != NULL) {
             if (a->func_data->declared == true) {
-                //compare stacks from a->data->top.data a parser->tmp_stack->data
-                //a->func_data->stack_params.top->data == parser->tmp_stack.top->data; //name:type
-                //if same, somehow reassign values to symtable_insert bellow
-                string_strtok(&parser->tmp_stack.top->data, ":", &parser->tmp_string);
-                //string_print(&parser->tmp_string);
+                if (a->func_data->num_params == parser->num_params) {
+                    stackptr *point =  a->func_data->stack_params.top;
+                    string_print(&parser->tmp_stack.top->data);
+                    string_print(&parser->tmp_stack.top->next->data);
+                    string_print(&parser->tmp_stack.top->next->next->data);
+                    string_print(&parser->tmp_stack.top->next->next->next->data);
+                    string_print(&parser->tmp_stack.top->next->next->next->next->data); 
+                    string_print(&parser->tmp_stack.top->next->next->next->next->next->data); 
+                   
+                   printf("\n");
+                    while(parser->tmp_stack.top != NULL) {
+                        stack_push(&parser->tmp_stack_3, parser->tmp_stack.top->data);
+                        stack_pop(&parser->tmp_stack);
+                        //string_print(&parser->tmp_stack_3.top->data);
+                    }
+                    string_print(&parser->tmp_stack_3.top->data);
+                    string_print(&parser->tmp_stack_3.top->next->data);
+                    string_print(&parser->tmp_stack_3.top->next->next->data);
+                    string_print(&parser->tmp_stack_3.top->next->next->next->data);
+                    string_print(&parser->tmp_stack_3.top->next->next->next->next->data);
+
+
+
+                    stackptr *point_2 = parser->tmp_stack_3.top;
+                    for(int i = 0; i < parser->num_params; i++) {
+                        //string_print(&point->data);
+                        //printf("\n");
+                        //string_strtok(&point_2->data, ":", &parser->tmp_string);
+                        point = point->next;
+                        point_2 = point_2->next;
+                        //compare stacks from a->data->top.data a parser->tmp_stack->data
+                        //a->func_data->stack_params.top->data == parser->tmp_stack.top->data; //name:type
+                        //if same, somehow reassign values to symtable_insert bellow
+                        //string_strtok(&parser->tmp_stack.top->data, ":", &parser->tmp_string);
+                        //string_print(&parser->tmp_string);
+                    }
+                }
             }
         }
 
 
 
         symtable_insert(&parser->global_symtable, &parser->func_id, func, true, true, parser->num_params, parser->num_return, parser->tmp_stack, parser->tmp_stack_2);
+
+        
 
         //THIS IS HOW U ACCESS NODE WITH NAME
         //nodeptr b = symtable_search(&parser->global_symtable, &parser->func_id);
@@ -412,6 +449,7 @@ int params(Parser parser) {
         //TO-DO: no arguments in function -> symtable
         return 0;
     } else if (is_utype(parser, 3)) { // ID
+        string_clear(&parser->tmp_string);
         string_copy(&parser->tmp_string, parser->token.tvalue.string);
         get_token();
         //copy param id into tmp_string
@@ -452,6 +490,7 @@ int params_2(Parser parser) {
     } else if (is_ttype(parser, 12)) { // ,
         get_token();
         token_isID(); // we found ID
+        string_clear(&parser->tmp_string);
         string_copy(&parser->tmp_string, parser->token.tvalue.string);
         get_token();
         token_ttype(20); // we found : after ID
