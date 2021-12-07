@@ -258,21 +258,46 @@ int require(Parser parser) {
 
 // <prog>
 int prog(Parser parser) {
+    
     get_token_EOF_gut();
+    
     //FUNCTION
     if (is_kword(parser, 3)) {
         get_token();
+        
         token_isID(); // we found ID after FUNCTION
         //Check it function is defined
-        string_copy(&parser->func_id,parser->token.tvalue.string);
-        nodeptr a = symtable_search(&parser->global_symtable, &parser->func_id);
-        
-        
+        string_clear(&parser->tmp_string);
+        /*
+        string_add_char(&parser->tmp_string, 'f');
+        string_add_char(&parser->tmp_string, 'r');
+        string_add_char(&parser->tmp_string, 'a');
+        string_add_char(&parser->tmp_string, 'n');
+        string_add_char(&parser->tmp_string, 't');
+        string_add_char(&parser->tmp_string, 'a');
+        */
+        /*
+        string_add_char(&parser->tmp_string, 'i');
+        string_add_char(&parser->tmp_string, 'v');
+        string_add_char(&parser->tmp_string, 'o');
+        string_add_char(&parser->tmp_string, 's');
+        string_add_char(&parser->tmp_string, '\0');
+        */
+        String *pointer = parser->token.tvalue.string;
+        nodeptr a = symtable_search(&parser->global_symtable, pointer);
+        //printf("pozice ivos %p\n", &a);
 
+        //string_print(pointer);
+        //printf("\n");
+        
+        if(a != NULL){
+            string_copy(&parser->func_id,parser->token.tvalue.string);
+            //printf("syr\n");
+        }
         if(a != NULL) {
-            string_print(a->key);
+            //string_print(a->key);
             if (a->func_data->defined == true) {
-                printf("tu\n");
+                //printf("tu\n");
                 return UNDEFINED_VAR_ERR;
             }
         }
@@ -283,8 +308,9 @@ int prog(Parser parser) {
         //stack_push(&parser->params_stack, parser->token.tvalue.string + type);
         get_token();
         token_ttype(14); // we found ( after ID
-        //stack_dispose(&parser->tmp_stack);
+        stack_dispose(&parser->tmp_stack);
 
+        parser->num_params = 0;
         parser->exit_code = params(parser); //process <params>
         if (parser->exit_code != 0) {
             return parser->exit_code;
@@ -293,14 +319,15 @@ int prog(Parser parser) {
         /*
         -load return params into stack
         */
-       parser->num_return = 0;
+        stack_dispose(&parser->tmp_stack_2);
+        parser->num_return = 0;
         parser->exit_code = return_type(parser); //process <return_type>
         if (parser->exit_code != 0) {
             return parser->exit_code;
         }
-        
         if(a != NULL) {
             if (a->func_data->declared == true) {
+                //printf("%i %i", a->func_data->num_params, parser->num_params);
                 if (a->func_data->num_params == parser->num_params) {
 
                     while(parser->tmp_stack.top != NULL) {
@@ -318,33 +345,41 @@ int prog(Parser parser) {
                         string_print(&point_2->data);
                         printf("\n");
                         string_strtok(&point_2->data, ":", &parser->tmp_string);
+                        
                         if(string_string_cmp(&point->data, &parser->tmp_string) != 0){
                             
                             //This is the end
+                            printf("tu1\n");
                             parser->exit_code = UNDEFINED_VAR_ERR;
                             return parser->exit_code;
                             
                         }
+                        
                         string_clear(&parser->tmp_string);
                         point = point->next;
                         point_2 = point_2->next;
 
                     } 
-
+                    
                     stack_dispose(&(parser->tmp_stack));
                    
                 } else {
+                    printf("tu2\n");
                     parser->exit_code = UNDEFINED_VAR_ERR;
                     return parser->exit_code;
                 }
                 if (a->func_data->num_return == parser->num_return) {
-                    
+                    //printf("adresa %p\n", &parser->tmp_stack_2.top->data);
                     while(parser->tmp_stack_2.top != NULL) {
                         stack_push(&parser->tmp_stack, parser->tmp_stack_2.top->data);
                         stack_pop(&parser->tmp_stack_2);
+                        //printf("adresa %p\n", &parser->tmp_stack_2.top->data);
                     }
+                    //printf("adresa %p\n", &parser->tmp_stack_2.top->data);
                     
-                    stack_dispose(&(parser->tmp_stack_2));
+                    
+                    //stack_dispose(&(parser->tmp_stack_2));
+                    
 
                     stackptr *point_2 = parser->tmp_stack.top;
                     stackptr *point = a->func_data->stack_returns.top;  
@@ -359,6 +394,7 @@ int prog(Parser parser) {
                         if(string_string_cmp(&point->data, &point_2->data) != 0){
                             
                             //This is the end
+                            printf("tu3\n");
                             parser->exit_code = UNDEFINED_VAR_ERR;
                             return parser->exit_code;
                             
@@ -367,6 +403,7 @@ int prog(Parser parser) {
                         point_2 = point_2->next;
                     }                   
                 } else {
+                    printf("tu4\n");
                     parser->exit_code = UNDEFINED_VAR_ERR;
                     return parser->exit_code;
                 }
@@ -385,9 +422,9 @@ int prog(Parser parser) {
         }
 
 
-        printf("insert\t");
-        string_print(&parser->func_id);
-        printf("\n");
+        //printf("insert\t");
+        //string_print(&parser->func_id);
+        //printf("\n");
 
         symtable_insert(&parser->global_symtable, &parser->func_id, func, true, true, parser->num_params, parser->num_return, parser->tmp_stack_2, parser->tmp_stack_3);
         /*
@@ -414,7 +451,9 @@ int prog(Parser parser) {
         if (parser->exit_code != 0) {
             return parser->exit_code;
         }
-        printf("RUN AGAIN\n");
+        //printf("RUN AGAIN\n");
+        //string_print(&parser->func_id);
+        //printf("\n");
         parser->exit_code = prog(parser); //process <prog>
         if (parser->exit_code != 0) {
             return parser->exit_code;
@@ -425,17 +464,21 @@ int prog(Parser parser) {
         get_token();
         token_isID(); // we found ID after GLOBAL
 
-        string_copy(&parser->func_id,parser->token.tvalue.string);
+        //string_copy(&parser->func_id,parser->token.tvalue.string);
+
+        String *pointer = parser->token.tvalue.string;
+        nodeptr a = symtable_search(&parser->global_symtable, pointer);
         
-        nodeptr a = symtable_search(&parser->global_symtable, &parser->func_id);
+        //nodeptr a = symtable_search(&parser->global_symtable, &parser->func_id);
         
         if(a != NULL) {
             if (a->func_data->declared == true) {
+                printf("tu6\n");
                 return UNDEFINED_VAR_ERR;
             }
         }
-
-
+        string_copy(&parser->func_id,parser->token.tvalue.string);
+        
         get_token();
         token_ttype(20); // we found : after ID
         get_token();
@@ -443,11 +486,15 @@ int prog(Parser parser) {
         get_token();
         token_ttype(14); // we found ( after ID
 
+        stack_dispose(&(parser->tmp_stack_3));
+        parser->num_params = 0;
+        parser->num_types = 0;
         parser->exit_code = type(parser); //process <type>
         if (parser->exit_code != 0) {
             return parser->exit_code;
         }
-
+        stack_dispose(&parser->tmp_stack_2);
+        parser->num_return = 0;
         parser->exit_code = return_type(parser); //process <return_type>
         if (parser->exit_code != 0) {
             return parser->exit_code;
@@ -458,7 +505,7 @@ int prog(Parser parser) {
         string_print(&parser->tmp_stack_3.top->next->next->data);
         string_print(&parser->tmp_stack_3.top->next->next->next->data);*/
 
-
+        //printf("==>> %s\n", parser->func_id.str);
         symtable_insert(&parser->global_symtable, &parser->func_id, func, true, false, parser->num_types, parser->num_return, parser->tmp_stack_3, parser->tmp_stack_2);
         //nodeptr b = symtable_search(&parser->global_symtable, &parser->func_id);
         //string_print(&b->func_data->stack_params.top->next->next->next->data);
