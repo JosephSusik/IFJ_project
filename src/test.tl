@@ -1,10 +1,6 @@
 require "ifj21"
 
-function hlavni_program(year : integer)
-    write("Hello from IFJ", year, "\n")
+function main()
+	local a : number = 1.5e+5
+	local b : number = 15.e-1
 end
-
-
-hlavni_program(21)
---hlavni_program(22) -- pozdrav z budoucnosti
-

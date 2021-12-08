@@ -42,6 +42,7 @@ typedef struct parser {
     stack tmp_stack_2;
     stack tmp_stack_3;
     String tmp_string;
+    bool label_main;
 } * Parser;
 
 int is_utype(Parser parser, int utype);

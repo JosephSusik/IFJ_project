@@ -282,7 +282,7 @@ int getNextToken(Token *token) {
                 } 
                 if (c == '"') {
                     c = (char)getc(source_file);
-                    if (isspace(c) || c == ')' || c == ',') {
+                    if (isspace(c) || c == ')' || c == ','|| c == '-') {
                         ungetc(c, source_file);
                         token->ttype = TOKEN_TYPE_STRING;
                         token->tuniontype = 5;
@@ -385,6 +385,11 @@ int getNextToken(Token *token) {
                         return free_memory(INTERNAL_ERR, string_2);
                     }
                     State = TOKEN_TYPE_DOUBLE;
+                } else if (c == 'e'|| c == 'E') {
+                    if (string_add_char(string_2, c) != 0) {
+                        return free_memory(INTERNAL_ERR, string_2);
+                    }
+                    State = TOKEN_TYPE_EXPONENT;
                 } else {
                     return free_memory(SCANNER_ERR, string_2);
                 }
@@ -476,6 +481,12 @@ int getNextToken(Token *token) {
                         }
                         return free_memory(OK, string_2);
                     } else if (c == ',') {
+                        ungetc(c, source_file);
+                        if(is_string_keyword(string_2, token) != 0) {
+                            return free_memory(INTERNAL_ERR, string_2);
+                        }
+                        return free_memory(OK, string_2);
+                    } else if (c == '-') {
                         ungetc(c, source_file);
                         if(is_string_keyword(string_2, token) != 0) {
                             return free_memory(INTERNAL_ERR, string_2);

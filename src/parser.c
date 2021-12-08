@@ -137,7 +137,8 @@
     ({ \
         if (parser->token.tvalue.kword != 6 && \
         parser->token.tvalue.kword != 7 && \
-        parser->token.tvalue.kword != 8 ) {\
+        parser->token.tvalue.kword != 8 &&\
+        parser->token.tvalue.kword != 10 ) {\
             return PARSER_ERR; \
         }\
     }) \
@@ -166,6 +167,7 @@ Parser init_parser() {
     parser->num_return = 0;
     parser->num_types = 0;
     parser->num_args = 0;
+    parser->label_main = false;
     stack_init(&parser->tmp_stack);
     stack_init(&parser->tmp_stack_2);
     stack_init(&parser->tmp_stack_3);
@@ -240,7 +242,8 @@ int is_ttype(Parser parser, int type) {
 int is_int_num_str(Parser parser) {
     if (parser->token.tvalue.kword != 6 && 
         parser->token.tvalue.kword != 7 && 
-        parser->token.tvalue.kword != 8 ) {
+        parser->token.tvalue.kword != 8 &&
+        parser->token.tvalue.kword != 10 ) {
             return 0; 
     } else {
         return 1;
@@ -266,7 +269,6 @@ int prog(Parser parser) {
     //FUNCTION
     if (is_kword(parser, 3)) {
         get_token();
-        
         token_isID(); // we found ID after FUNCTION
         //Check it function is defined
         string_clear(&parser->tmp_string);
@@ -469,11 +471,10 @@ int prog(Parser parser) {
 
         if (b->func_data->num_params != 0) {
             for (int i = 1; i <= b->func_data->num_params; i++) {
-                printf("DEFVAR LF@%%param%i\n", i);
-                printf("MOVE LF@%%param%i LF@%%%d\n", i, i);
+                printf("DEFVAR LF@param%i\n", i);
+                printf("MOVE LF@param%i LF@%%%d\n", i, i);
             }
         }
-
 
 
         parser->exit_code = body(parser); //process <body>
@@ -573,7 +574,10 @@ int prog(Parser parser) {
     } else if (is_utype(parser, 3)) {
         //maybe with bool??
         //prints LABEL $$main
-        print_main();
+        if (parser->label_main == false) {
+            print_main();
+            parser->label_main = true;
+        }
 
         string_copy(&parser->func_id ,parser->token.tvalue.string);
         //nodeptr a = symtable_search(&parser->global_symtable, parser->token.tvalue.string);
@@ -716,10 +720,25 @@ int prog(Parser parser) {
 
         stack_dispose(&parser->tmp_stack);
 
+        //string_print(&parser->tmp_stack_2.top->data);
+        while (parser->tmp_stack_2.top != NULL) {
+            stack_push(&parser->tmp_stack, parser->tmp_stack_2.top->data);
+            stack_pop(&parser->tmp_stack_2);
+        }
+
+        stackptr *point = a->func_data->stack_params.top;
         for(int i = 1; i <= parser->num_args; i++) {
-            printf("MOVE TF@%%%d something\n", i);
+            printf("MOVE TF@%%%d ", i);
+            string_strtok(&point->data, ":", &parser->tmp_string);
+            string_print(&parser->tmp_string);
+            point = point->next;
+            printf("@");
+            string_print(&parser->tmp_stack.top->data);
+            stack_pop(&parser->tmp_stack);
+            printf("\n");
         }     
 
+     
         //call the function
         
         printf("CALL $"); 
@@ -767,6 +786,11 @@ int params(Parser parser) {
             string_add_char(&parser->tmp_string, 's');
             string_add_char(&parser->tmp_string, 't');
             string_add_char(&parser->tmp_string, 'r');
+        } else if (is_kword(parser, 10)) {
+            string_add_char(&parser->tmp_string, ':');
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 'i');
+            string_add_char(&parser->tmp_string, 'l');
         }
         //push to stack [name:int/num/string]
         stack_push(&parser->tmp_stack, parser->tmp_string);
@@ -807,6 +831,11 @@ int params_2(Parser parser) {
             string_add_char(&parser->tmp_string, 's');
             string_add_char(&parser->tmp_string, 't');
             string_add_char(&parser->tmp_string, 'r');
+        }   else if (is_kword(parser, 10)) {
+            string_add_char(&parser->tmp_string, ':');
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 'i');
+            string_add_char(&parser->tmp_string, 'l');
         }
         stack_push(&parser->tmp_stack, parser->tmp_string);
         parser->num_params++;
@@ -897,6 +926,10 @@ int type(Parser parser) {
             string_add_char(&parser->tmp_string, 's');
             string_add_char(&parser->tmp_string, 't');
             string_add_char(&parser->tmp_string, 'r');
+        } else if (is_kword(parser, 10)) {   //string
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 'i');
+            string_add_char(&parser->tmp_string, 'l');
         }
         stack_push(&parser->tmp_stack_3, parser->tmp_string);
         parser->num_types++;
@@ -927,6 +960,10 @@ int type_2(Parser parser) {
             string_add_char(&parser->tmp_string, 's');
             string_add_char(&parser->tmp_string, 't');
             string_add_char(&parser->tmp_string, 'r');
+        } else if (is_kword(parser, 10)) {   //string
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 'i');
+            string_add_char(&parser->tmp_string, 'l');
         }
         stack_push(&parser->tmp_stack_3, parser->tmp_string);
         parser->num_types++;
@@ -950,14 +987,12 @@ int args(Parser parser) {
         string_add_char(&parser->tmp_string, 'n');
         string_add_char(&parser->tmp_string, 't');
         stack_push(&parser->tmp_stack, parser->tmp_string);
+        
         string_clear(&parser->tmp_string);
         sprintf(parser->tmp_string.str, "%d", parser->token.tvalue.whole_num);
-
-        printf("tu\n");
-        string_print(&parser->tmp_string);
-        printf("\n");
-
+        parser->tmp_string.length = (int)strlen(parser->tmp_string.str);
         stack_push(&parser->tmp_stack_2, parser->tmp_string);
+        
         parser->num_args++;
         return args_2(parser);
     } else if (is_ttype(parser, 37)) { // <value> -> NUMBER(double)
@@ -965,9 +1000,12 @@ int args(Parser parser) {
         string_add_char(&parser->tmp_string, 'u');
         string_add_char(&parser->tmp_string, 'm');
         stack_push(&parser->tmp_stack, parser->tmp_string);
+
         string_clear(&parser->tmp_string);
         sprintf(parser->tmp_string.str, "%f", parser->token.tvalue.dec_num);
+        parser->tmp_string.length = (int)strlen(parser->tmp_string.str);
         stack_push(&parser->tmp_stack_2, parser->tmp_string);
+        
         parser->num_args++;
         return args_2(parser);
     } else if (is_utype(parser, 5)) { // <value> -> STRING  
@@ -975,7 +1013,22 @@ int args(Parser parser) {
         string_add_char(&parser->tmp_string, 't');
         string_add_char(&parser->tmp_string, 'r');
         stack_push(&parser->tmp_stack, parser->tmp_string);
-        //stack_push(&parser->tmp_stack_2, parser->token.tvalue.string);
+
+        String a;
+        string_init(&a);
+        string_copy(&a, parser->token.tvalue.string);
+
+        stack_push(&parser->tmp_stack_2, a);
+        
+        parser->num_args++;
+        return args_2(parser);
+    } else if (is_kword(parser, 10)) { // <value> -> STRING  
+        string_add_char(&parser->tmp_string, 'n');
+        string_add_char(&parser->tmp_string, 'i');
+        string_add_char(&parser->tmp_string, 'l');
+        stack_push(&parser->tmp_stack, parser->tmp_string);
+        stack_push(&parser->tmp_stack_2, parser->tmp_string);
+        
         parser->num_args++;
         return args_2(parser);
     } else {
@@ -999,6 +1052,12 @@ int args_2(Parser parser) {
             string_add_char(&parser->tmp_string, 'n');
             string_add_char(&parser->tmp_string, 't');
             stack_push(&parser->tmp_stack, parser->tmp_string);
+
+            string_clear(&parser->tmp_string);
+            sprintf(parser->tmp_string.str, "%d", parser->token.tvalue.whole_num);
+            parser->tmp_string.length = (int)strlen(parser->tmp_string.str);
+            stack_push(&parser->tmp_stack_2, parser->tmp_string);
+
             parser->num_args++;
             parser->exit_code = args_2(parser);
         } else if (is_ttype(parser, 37)) { // <value> -> NUMBER(double)
@@ -1006,6 +1065,12 @@ int args_2(Parser parser) {
             string_add_char(&parser->tmp_string, 'u');
             string_add_char(&parser->tmp_string, 'm');
             stack_push(&parser->tmp_stack, parser->tmp_string);
+
+            string_clear(&parser->tmp_string);
+            sprintf(parser->tmp_string.str, "%d", parser->token.tvalue.whole_num);
+            parser->tmp_string.length = (int)strlen(parser->tmp_string.str);
+            stack_push(&parser->tmp_stack_2, parser->tmp_string);
+
             parser->num_args++;
             parser->exit_code = args_2(parser);
         } else if (is_utype(parser, 5)) { // <value> -> STRING
@@ -1013,8 +1078,24 @@ int args_2(Parser parser) {
             string_add_char(&parser->tmp_string, 't');
             string_add_char(&parser->tmp_string, 'r');
             stack_push(&parser->tmp_stack, parser->tmp_string);
+
+            String a;
+            string_init(&a);
+            string_copy(&a, parser->token.tvalue.string);
+
+            stack_push(&parser->tmp_stack_2, a);
+
             parser->num_args++;
             parser->exit_code = args_2(parser);
+        } else if (is_kword(parser, 10)) { // <value> -> STRING  
+            string_add_char(&parser->tmp_string, 'n');
+            string_add_char(&parser->tmp_string, 'i');
+            string_add_char(&parser->tmp_string, 'l');
+            stack_push(&parser->tmp_stack, parser->tmp_string);
+            stack_push(&parser->tmp_stack_2, parser->tmp_string);
+        
+            parser->num_args++;
+            return args_2(parser);
         } else {
             return PARSER_ERR;
         }
@@ -1226,7 +1307,7 @@ int body(Parser parser) {
                     for(int i = 0; i < parser->token.tvalue.string->length; i++) {
                         if (parser->token.tvalue.string->str[i] < 33 || parser->token.tvalue.string->str[i] == 35 || parser->token.tvalue.string->str[i] == 92) {
                             int a = parser->token.tvalue.string->str[i];
-                            printf("/0%i",a);
+                            printf("\\0%i",a);
                         } else {
                             printf("%c", parser->token.tvalue.string->str[i]);
 
@@ -1285,10 +1366,21 @@ int body(Parser parser) {
             }
             return 0;
         }
+
+        nodeptr a = symtable_search(&parser->global_symtable, parser->token.tvalue.string);
+        if (a == NULL) {
+            parser->exit_code = UNDEFINED_VAR_ERR;
+            return parser->exit_code;
+        }
         get_token();
         if (is_ttype(parser, 14)) {   // (
+            parser->num_args = 0;
             parser->exit_code = args(parser);
             if (parser->exit_code != 0) {
+                return parser->exit_code;
+            }
+            if (parser->num_args != a->func_data->num_params) {
+                parser->exit_code = PARAM_ERR;
                 return parser->exit_code;
             }
         } else if (is_ttype(parser, 12)) { // ,
