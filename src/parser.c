@@ -162,6 +162,7 @@ Parser init_parser() {
     parser->end = false;
     parser->wend = false;
     symtable_init(&parser->global_symtable);
+    symtable_init(&parser->local_symtable);
     string_init(&parser->func_id);
     parser->num_params = 0;
     parser->num_return = 0;
@@ -177,6 +178,7 @@ Parser init_parser() {
 
 int free_parser(Parser parser) {
     symtable_dispose(&parser->global_symtable);
+    symtable_dispose(&parser->local_symtable);
     string_free(&parser->func_id);
     stack_dispose(&parser->tmp_stack);
     //stack_dispose(&parser->tmp_stack_2);
@@ -476,6 +478,8 @@ int prog(Parser parser) {
             }
         }
 
+        symtable_dispose(&parser->local_symtable);
+        symtable_init(&parser->local_symtable);
 
         parser->exit_code = body(parser); //process <body>
         if (parser->exit_code != 0) {
@@ -1317,7 +1321,9 @@ int body(Parser parser) {
                 }
                 if (is_utype(parser, 3)) {  // its ID
                     nodeptr a = symtable_search(&parser->global_symtable, &parser->func_id);
-                    if (a != NULL) {
+                    nodeptr b = symtable_search(&parser->local_symtable, parser->token.tvalue.string);
+                    int x = string_string_cmp(&parser->func_id, parser->token.tvalue.string);
+                    if (a != NULL && x == 0) {
                         bool par_f = false;
                         stackptr *point = a->func_data->stack_params.top;
                         for (int i = 1; i <= a->func_data->num_params; i++) {
@@ -1340,6 +1346,8 @@ int body(Parser parser) {
                             parser->exit_code = UNDEFINED_VAR_ERR;
                             return parser->exit_code;
                         }
+                    } else if (b != NULL) {
+
                     } else {
                         parser->exit_code = UNDEFINED_VAR_ERR;
                         return parser->exit_code;
@@ -1415,7 +1423,13 @@ int body(Parser parser) {
     } else if (is_kword(parser, 9)) {   //LOCAL
         get_token();
         token_isID();   // is ID
+        String new_string;
+        String *p_new_string = &new_string;
+        string_init(p_new_string);
+        //string_copy(p_new_string,parser->token.tvalue.string);
+        string_copy(p_new_string, parser->token.tvalue.string);
 
+        symtable_insert(&parser->local_symtable, p_new_string, var, false, false, 0 , 0, parser->tmp_stack, parser->tmp_stack);
         get_token();
         token_ttype(20); // is :
         parser->exit_code = assign(parser);

@@ -33,6 +33,7 @@ typedef struct parser {
     bool end;   // if end
     bool wend;  //while end
     symtable global_symtable;
+    symtable local_symtable;
     String func_id;
     int num_params;
     int num_return;
