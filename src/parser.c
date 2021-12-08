@@ -198,6 +198,7 @@ int parse() {
     
     //Call function to print header of IFJcode21 -> .IFJcode21
     print_header();
+    printf("\n");
 
     parser->exit_code = prog(parser);
     if (parser->exit_code != 0) {
@@ -338,16 +339,16 @@ int prog(Parser parser) {
 
                     //params
                     for(int i = 0; i < parser->num_params; i++) {
-                        string_print(&point->data);
-                        printf("    ");
-                        string_print(&point_2->data);
-                        printf("\n");
+                        //string_print(&point->data);
+                        //printf("    ");
+                        //string_print(&point_2->data);
+                        //printf("\n");
                         string_strtok(&point_2->data, ":", &parser->tmp_string);
                         
                         if(string_string_cmp(&point->data, &parser->tmp_string) != 0){
                             
                             //This is the end
-                            printf("tu1\n");
+                            //printf("tu1\n");
                             parser->exit_code = UNDEFINED_VAR_ERR;
                             return parser->exit_code;
                             
@@ -362,7 +363,7 @@ int prog(Parser parser) {
                     stack_dispose(&(parser->tmp_stack));
                    
                 } else {
-                    printf("tu2\n");
+                    //printf("tu2\n");
                     parser->exit_code = UNDEFINED_VAR_ERR;
                     return parser->exit_code;
                 }
@@ -382,14 +383,14 @@ int prog(Parser parser) {
                     stackptr *point_2 = parser->tmp_stack.top;
                     stackptr *point = a->func_data->stack_returns.top;  
                     
-                    printf("--returns---\n");
+                    //printf("--returns---\n");
                     
                     //returns
                     for(int i = 0; i < parser->num_return; i++) {
-                        string_print(&point->data);
-                        printf("    ");
-                        string_print(&point_2->data);
-                        printf("\n");
+                        //string_print(&point->data);
+                        //printf("    ");
+                        //string_print(&point_2->data);
+                        //printf("\n");
                         
                         if(string_string_cmp(&point->data, &point_2->data) != 0){
                             
@@ -453,8 +454,28 @@ int prog(Parser parser) {
         //THIS IS HOW U ACCESS NODE WITH NAME
         //nodeptr b = symtable_search(&parser->global_symtable, &parser->func_id);
       
-    
-        
+        nodeptr b = symtable_search(&parser->global_symtable, &parser->func_id);
+
+        printf("LABEL $");
+        string_print(b->key);
+        printf("\n");
+        printf("PUSHFRAME\n");
+        if (b->func_data->num_return != 0) {
+            for (int i = 1; i <= b->func_data->num_return; i++) {
+                printf("DEFVAR LF@%%retval%i\n", i);
+                printf("MOVE LF@%%retval%i nil@nil\n", i);
+            }
+        }
+
+        if (b->func_data->num_params != 0) {
+            for (int i = 1; i <= b->func_data->num_params; i++) {
+                printf("DEFVAR LF@%%param%i\n", i);
+                printf("MOVE LF@%%param%i LF@%%%d\n", i, i);
+            }
+        }
+
+
+
         parser->exit_code = body(parser); //process <body>
         if (parser->exit_code != 0) {
             return parser->exit_code;
@@ -462,6 +483,11 @@ int prog(Parser parser) {
         //printf("RUN AGAIN\n");
         //string_print(&parser->func_id);
         //printf("\n");
+
+        printf("POPFRAME\n");
+        printf("RETURN\n");
+        printf("\n");
+
         parser->exit_code = prog(parser); //process <prog>
         if (parser->exit_code != 0) {
             return parser->exit_code;
@@ -547,7 +573,7 @@ int prog(Parser parser) {
     } else if (is_utype(parser, 3)) {
         //maybe with bool??
         //prints LABEL $$main
-        //print_main();
+        print_main();
 
         string_copy(&parser->func_id ,parser->token.tvalue.string);
         //nodeptr a = symtable_search(&parser->global_symtable, parser->token.tvalue.string);
@@ -590,6 +616,8 @@ int prog(Parser parser) {
         token_ttype(14); // we found ( after ID
         parser->num_args = 0;
 
+        stack_dispose(&parser->tmp_stack_2);
+
         parser->exit_code = args(parser); //process <args>
         if (parser->exit_code != 0) {
             return parser->exit_code;
@@ -611,9 +639,9 @@ int prog(Parser parser) {
 
 
         if(a != NULL){
-            printf("Nasel jsem funkci : ");
-            string_print(a->key);
-            printf("\n");
+            //printf("Nasel jsem funkci : ");
+            //string_print(a->key);
+            //printf("\n");
             if (a->func_data->num_params == parser->num_args) {
                 
                 stackptr *point_2 = parser->tmp_stack_3.top;
@@ -622,22 +650,37 @@ int prog(Parser parser) {
                 //string_clear(&parser->tmp_string);
                 
                 for (int i = 0; i < parser->num_args; i++) {
-                        string_print(&point->data);
-                        printf("    ");
-                        string_print(&point_2->data);
-                        printf("\n");
-                        /*
-                        string_strtok(&point_2->data, ":", &parser->tmp_string);
+                        //string_print(&point->data);
+                        //printf("    ");
+                        //string_print(&point_2->data);
+                        //printf("\n");
+                        
+                        string_strtok(&point->data, ":", &parser->tmp_string);
                                                 
-                        if(string_string_cmp(&point->data, &parser->tmp_string) != 0){
-                            
+                        if(string_string_cmp(&point_2->data, &parser->tmp_string) != 0){
+                            //if argument is type num and is passed int, still should work
+                            if (string_cmp(&parser->tmp_string, "num") == 0) {
+                                if (string_cmp(&point_2->data, "int") != 0) {
+                                    //printf("int num\n");
+                                    //printf("tu1\n");
+                                    parser->exit_code = UNDEFINED_VAR_ERR;
+                                    return parser->exit_code;
+                                } else {
+                                    //printf("to Number inserted INT\n");
+                                }
+                            } else {
+                                //printf("tu1\n");
+                                parser->exit_code = UNDEFINED_VAR_ERR;
+                                return parser->exit_code;
+                            }
+                            /*
                             //This is the end
                             printf("tu1\n");
                             parser->exit_code = UNDEFINED_VAR_ERR;
                             return parser->exit_code;
-                            
+                            */
                         }
-                        */
+                        
                         
                         string_clear(&parser->tmp_string);
                         point = point->next;
@@ -647,22 +690,42 @@ int prog(Parser parser) {
                 
                 
                 
-                printf("Ma spravny pocet argumentu\n");
+                //printf("Ma spravny pocet argumentu\n");
             } else {
-                printf("Ma SPATNY pocet argumentu\n");
+                //printf("Ma SPATNY pocet argumentu\n");
                 parser->exit_code = PARAM_ERR;
                 return parser->exit_code;
             }
         } else{
-            printf("Nenasel jsem funkci\n");
+            //printf("Nenasel jsem funkci\n");
             parser->exit_code = UNDEFINED_VAR_ERR;
             return parser->exit_code;
         }
+        
+        //PRINT 3 ADRESS CODE FOR THE CALL OF FUNCTION
+        printf("CREATEFRAME\n");
+        printf("PUSHFRAME\n");
+        printf("CREATEFRAME\n");
+        for(int i = 1; i <= parser->num_args; i++) {
+            printf("DEFVAR TF@%%%d\n", i);
+        }        
+        
+        //move values into the TF@
+        //when reading them, read them into stack like type@value
+        // then print them 
 
-        //TO-DO - type of argument control -> push into stack int/string/num, then compare?
+        stack_dispose(&parser->tmp_stack);
 
-        //printf("%d\n", parser->num_args);
+        for(int i = 1; i <= parser->num_args; i++) {
+            printf("MOVE TF@%%%d something\n", i);
+        }     
 
+        //call the function
+        
+        printf("CALL $"); 
+        string_print(a->key);
+        printf("\n");
+        
 
         parser->exit_code = prog(parser); //process <prog>
         if (parser->exit_code != 0) {
@@ -887,6 +950,14 @@ int args(Parser parser) {
         string_add_char(&parser->tmp_string, 'n');
         string_add_char(&parser->tmp_string, 't');
         stack_push(&parser->tmp_stack, parser->tmp_string);
+        string_clear(&parser->tmp_string);
+        sprintf(parser->tmp_string.str, "%d", parser->token.tvalue.whole_num);
+
+        printf("tu\n");
+        string_print(&parser->tmp_string);
+        printf("\n");
+
+        stack_push(&parser->tmp_stack_2, parser->tmp_string);
         parser->num_args++;
         return args_2(parser);
     } else if (is_ttype(parser, 37)) { // <value> -> NUMBER(double)
@@ -894,13 +965,17 @@ int args(Parser parser) {
         string_add_char(&parser->tmp_string, 'u');
         string_add_char(&parser->tmp_string, 'm');
         stack_push(&parser->tmp_stack, parser->tmp_string);
+        string_clear(&parser->tmp_string);
+        sprintf(parser->tmp_string.str, "%f", parser->token.tvalue.dec_num);
+        stack_push(&parser->tmp_stack_2, parser->tmp_string);
         parser->num_args++;
         return args_2(parser);
-    } else if (is_utype(parser, 5)) { // <value> -> STRING
+    } else if (is_utype(parser, 5)) { // <value> -> STRING  
         string_add_char(&parser->tmp_string, 's');
         string_add_char(&parser->tmp_string, 't');
         string_add_char(&parser->tmp_string, 'r');
         stack_push(&parser->tmp_stack, parser->tmp_string);
+        //stack_push(&parser->tmp_stack_2, parser->token.tvalue.string);
         parser->num_args++;
         return args_2(parser);
     } else {
@@ -1141,13 +1216,60 @@ int body(Parser parser) {
     } else if (is_utype(parser, 3)) { // ID
         if (string_cmp(parser->token.tvalue.string, "write") == 0) {
             get_token();
-            if (is_ttype(parser, 14)) {
+            if (is_ttype(parser, 14)) {     // (
                 while(1) {
                 //get_token();
                 getNextToken(&parser->token);
-                //isID()
-                //search-bintree -> ID value
-                //push_stack
+                if (is_utype(parser, 5)) {  // its STRING
+                    printf("WRITE string@");
+                    //string_print(parser->token.tvalue.string);
+                    for(int i = 0; i < parser->token.tvalue.string->length; i++) {
+                        if (parser->token.tvalue.string->str[i] < 33 || parser->token.tvalue.string->str[i] == 35 || parser->token.tvalue.string->str[i] == 92) {
+                            int a = parser->token.tvalue.string->str[i];
+                            printf("/0%i",a);
+                        } else {
+                            printf("%c", parser->token.tvalue.string->str[i]);
+
+                        }
+                    }
+                    printf("\n");
+                }
+                if (is_utype(parser, 3)) {  // its ID
+                    nodeptr a = symtable_search(&parser->global_symtable, &parser->func_id);
+                    if (a != NULL) {
+                        bool par_f = false;
+                        stackptr *point = a->func_data->stack_params.top;
+                        for (int i = 1; i <= a->func_data->num_params; i++) {
+                            string_clear(&parser->tmp_string);
+                            string_copy(&parser->tmp_string, &point->data);
+                            int len = strlen(parser->tmp_string.str);
+                            parser->tmp_string.str[len-4] = '\0';
+                            parser->tmp_string.str[len-3] = '\0';
+                            parser->tmp_string.str[len-2] = '\0';
+                            parser->tmp_string.str[len-1] = '\0';
+                        
+                            if (string_string_cmp(&parser->tmp_string, parser->token.tvalue.string) == 0) {
+                                printf("WRITE LF@param%d\n", i);
+                                par_f = true;
+                            }
+                            point = point->next;
+                        }
+                        if (par_f == false) {
+                            //printf("not found\n");
+                            parser->exit_code = UNDEFINED_VAR_ERR;
+                            return parser->exit_code;
+                        }
+                    } else {
+                        parser->exit_code = UNDEFINED_VAR_ERR;
+                        return parser->exit_code;
+                    }
+                }
+       
+
+
+
+
+
                 if (is_ttype(parser, 15)) {
                     //parser->exit_code = eval(stack)
                     // if (exit_code != 0) return exitcode

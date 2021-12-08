@@ -1,24 +1,10 @@
 require "ifj21"
 
---global sam : function()
-
-global josef : function (number, integer) : number
-
---global mara : function (integer, string, integer) 
-
-function josef (a1:number, a2:integer) : number
-end
-
-function mara (a1:integer, a2:string, a3:integer) 
-end
-
-function sam ()
+function hlavni_program(year : integer)
+    write("Hello from IFJ", year, "\n")
 end
 
 
-mara ("aj","as",  1)
-sam()
+hlavni_program(21)
+--hlavni_program(22) -- pozdrav z budoucnosti
 
---funkce()
-
-josef(1,3)

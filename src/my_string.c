@@ -104,8 +104,7 @@ int string_strtok(String *s1, const char * d, String *s2) {
 
 
     string_clear(s2); 
-    printf("tu\n");
-
+ /*
     int new_length = strlen(token);
     if (new_length >= s2->alloc_size) {
         if ((s2->str = (char*) realloc(s2->str, new_length + 1)) == NULL) {
@@ -115,12 +114,11 @@ int string_strtok(String *s1, const char * d, String *s2) {
     }
     strcpy(s2->str, token);
     s2->length = new_length;
-
-    /*
-    string_clear(s2);
+*/
+    
     s2->length = (int)strlen(token);
     strcpy(s2->str, token);
 
-    */
+    
     return 0;
 }
