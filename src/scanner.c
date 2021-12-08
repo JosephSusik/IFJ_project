@@ -282,7 +282,7 @@ int getNextToken(Token *token) {
                 } 
                 if (c == '"') {
                     c = (char)getc(source_file);
-                    if (isspace(c) || c == ')') {
+                    if (isspace(c) || c == ')' || c == ',') {
                         ungetc(c, source_file);
                         token->ttype = TOKEN_TYPE_STRING;
                         token->tuniontype = 5;

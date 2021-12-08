@@ -141,7 +141,6 @@ void symtable_insert(symtable *sroot, String *k, node_type type, bool decl, bool
             //return ERR_INTERNAL;
             return;
         }
-
         tmp_data->declared = decl;
         tmp_data->defined = def;
         tmp_data->num_params = params;
@@ -165,7 +164,6 @@ void symtable_insert(symtable *sroot, String *k, node_type type, bool decl, bool
                 ret_s_pointer = ret_s_pointer->next;
             }
         }
-        
         tree_insert(&(sroot->root), k, type, tmp_data);
         
         

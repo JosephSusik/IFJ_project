@@ -37,6 +37,7 @@ typedef struct parser {
     int num_params;
     int num_return;
     int num_types;
+    int num_args;
     stack tmp_stack;
     stack tmp_stack_2;
     stack tmp_stack_3;

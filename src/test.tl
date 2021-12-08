@@ -1,16 +1,24 @@
 require "ifj21"
 
-global josef : function (number, integer) : string
+--global sam : function()
 
-function josef (a1:number, a2:integer) : string
+global josef : function (number, integer) : number
+
+--global mara : function (integer, string, integer) 
+
+function josef (a1:number, a2:integer) : number
 end
 
-global mara : function (integer, string) 
-
-function mara (a1:integer, a2:string) 
+function mara (a1:integer, a2:string, a3:integer) 
 end
-
-global sam : function()
 
 function sam ()
 end
+
+
+mara ("aj","as",  1)
+sam()
+
+--funkce()
+
+josef(1,3)
